@@ -28,6 +28,8 @@ select
     category_ref_3,
     category_name_3,
 
+    imagemain,
+
     -- links
     link360,
     linkvideo

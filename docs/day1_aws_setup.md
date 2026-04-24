@@ -1,8 +1,8 @@
 # Day 1 — AWS Setup
 
-## What We Did
+## What I Did
 
-We created an AWS account, set up a secure IAM user with S3 permissions, generated
+I created an AWS account, set up a secure IAM user with S3 permissions, generated
 access keys, and created the S3 bucket that the pipeline writes raw data to.
 
 ---
@@ -43,7 +43,7 @@ almost never use this for day-to-day work. If those credentials leaked, someone 
 delete your entire account or run up a huge bill.
 
 **IAM users** — separate identities you create within your account, each with specific
-permissions. We created `supply-integration-local` with access only to S3.
+permissions. I created `supply-integration-local` with access only to S3.
 
 This is the principle of **least privilege**: give each identity only the permissions
 it needs and nothing more. Our pipeline only needs to read and write S3 — it doesn't
@@ -82,7 +82,7 @@ across all AWS accounts — if someone else has already created `supply-integrat
 you can't use that name. Buckets have a region (the physical data centre location
 where your data is stored).
 
-We used **eu-south-2 (Europe/Spain)** because:
+I used **eu-south-2 (Europe/Spain)** because:
 - Data stays in the EU (relevant for GDPR and personal data considerations)
 - Closer to where you're running the pipeline (lower latency)
 - You wanted to learn a new region not used at Helloprint
@@ -94,7 +94,7 @@ explicit endpoint configuration in tools that aren't kept up to date.
 
 ---
 
-## What We Set Up
+## What I Set Up
 
 ### IAM user creation
 

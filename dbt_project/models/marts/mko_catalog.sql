@@ -36,6 +36,7 @@ select
     p.item_height_mm,
     p.item_weight_kg,
     p.composition,
+    p.imagemain,
 
     pr.min_unit_price,
     pr.max_unit_price,

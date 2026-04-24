@@ -1,8 +1,8 @@
 # Day 3 — Transform with dbt + DuckDB
 
-## What We Did
+## What I Did
 
-We built the transformation layer: SQL models that read the raw Parquet files from S3,
+I built the transformation layer: SQL models that read the raw Parquet files from S3,
 clean and type-cast the data, join it together, and write a final analytics-ready table.
 This is the **T** in ELT.
 

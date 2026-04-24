@@ -1,8 +1,8 @@
 # Day 2 — Data Extraction
 
-## What We Did
+## What I Did
 
-We built the extraction layer of the pipeline: Python code that fetches data from the
+I built the extraction layer of the pipeline: Python code that fetches data from the
 Makito API and uploads it to AWS S3 as Parquet files. This is the **E** and first **L**
 in ELT — Extract, then Load the raw data before transforming it.
 
@@ -28,7 +28,7 @@ easy to see what arrived on each run.
 
 ### Virtual environments
 
-Before writing any code, we set up a virtual environment:
+Before writing any code, I set up a virtual environment:
 
 ```bash
 python3 -m venv .venv
@@ -295,7 +295,7 @@ a manifest XML (a list of file URLs pointing to CSVs), which we then had to fetc
 single XML file directly — no manifest, no CSV links. `fetch_product_manifest` found 0
 files because there were no `<file>` elements to find.
 
-**How we diagnosed it:** We wrote a small debug script (`debug_manifest.py`) to fetch
+**How we diagnosed it:** I wrote a small debug script (`debug_manifest.py`) to fetch
 and print the raw API response. Seeing the actual XML made the structure immediately clear.
 
 **Lesson:** Always inspect the raw API response before writing a parser. Never assume

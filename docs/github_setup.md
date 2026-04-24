@@ -1,6 +1,6 @@
 # GitHub Setup — Version Control and Publishing Your Portfolio
 
-## What We Did
+## What I Did
 
 We initialised a git repository in the project, made an initial commit, created a
 repository on GitHub, and pushed the code. The project is now publicly visible on

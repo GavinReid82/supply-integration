@@ -1,7 +1,11 @@
 import logging
 import os
 import subprocess
+import sys
 from datetime import date
+from pathlib import Path
+
+DBT = str(Path(sys.executable).parent / "dbt")
 
 from dotenv import load_dotenv
 
@@ -40,13 +44,13 @@ def extract():
 def transform():
     logger.info("=== TRANSFORM ===")
     result = subprocess.run(
-        ["dbt", "run", "--project-dir", "dbt_project", "--profiles-dir", "dbt_project"],
+        [DBT, "run", "--project-dir", "dbt_project", "--profiles-dir", "dbt_project"],
         check=True,
     )
     logger.info("dbt run complete.")
 
     subprocess.run(
-        ["dbt", "test", "--project-dir", "dbt_project", "--profiles-dir", "dbt_project"],
+        [DBT, "test", "--project-dir", "dbt_project", "--profiles-dir", "dbt_project"],
         check=True,
     )
     logger.info("dbt test complete.")

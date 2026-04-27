@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: int_mko_products
+    description: >
+      MKO products normalised to the canonical product shape.
+      Adds supplier='mko'. One row per product.
+
+  - name: int_mko_variants
+    description: >
+      MKO variants normalised to canonical shape.
+      Adds supplier='mko'. One row per variant.
+
+  - name: int_mko_prices
+    description: >
+      MKO price tiers normalised to canonical shape.
+      Adds supplier='mko'. One row per product/tier.
+
+  - name: int_mko_stock
+    description: >
+      MKO stock levels normalised to canonical shape.
+      Adds supplier='mko'. One row per product/warehouse.
+
+  - name: int_mko_print_options
+    description: >
+      MKO print options normalised to canonical shape.
+      Adds supplier='mko'. One row per product/technique/area.
+
+  - name: int_mko_print_prices
+    description: >
+      MKO print technique prices normalised to canonical shape.
+      Adds supplier='mko'. One row per technique/tier.

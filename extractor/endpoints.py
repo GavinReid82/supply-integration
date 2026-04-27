@@ -160,3 +160,67 @@ def fetch_stock(base_url: str, suffix: str) -> pd.DataFrame:
 
     logger.info(f"Parsed {len(rows)} stock rows from stock XML")
     return pd.DataFrame(rows)
+
+
+def fetch_print(base_url: str, suffix: str) -> pd.DataFrame:
+    """
+    Fetch and parse the print options XML endpoint.
+    Returns one row per product / technique / area combination.
+    """
+    url = base_url + suffix
+    content = get_with_retry(url)
+    root = ET.fromstring(content)
+
+    rows = []
+    for product in root.findall(".//product"):
+        ref = _t(product, "ref")
+        for printjob in product.findall("printjobs/printjob"):
+            teccode      = _t(printjob, "teccode")
+            tecname      = _t(printjob, "tecname")
+            colour_layers   = _t(printjob, "colour_layers")
+            includedcolour  = _t(printjob, "includedcolour")
+            for area in printjob.findall("areas/area"):
+                rows.append({
+                    "product_ref":    ref,
+                    "teccode":        teccode,
+                    "tecname":        tecname,
+                    "colour_layers":  colour_layers,
+                    "includedcolour": includedcolour,
+                    "areacode":       _t(area, "areacode"),
+                    "maxcolour":      _t(area, "maxcolour"),
+                    "areaname":       _t(area, "areaname"),
+                    "areawidth":      _t(area, "areawidth"),
+                    "areahight":      _t(area, "areahight"),
+                    "areaimg":        _t(area, "areaimg"),
+                })
+
+    logger.info(f"Parsed {len(rows)} print option rows")
+    return pd.DataFrame(rows)
+
+
+def fetch_print_price(base_url: str, suffix: str) -> pd.DataFrame:
+    """
+    Fetch and parse the print job prices XML endpoint.
+    Returns one row per technique with up to 7 quantity-tiered price columns.
+    """
+    url = base_url + suffix
+    content = get_with_retry(url)
+    root = ET.fromstring(content)
+
+    rows = []
+    for printjob in root.findall(".//printjob"):
+        row = {
+            "teccode":   _t(printjob, "teccode"),
+            "code":      _t(printjob, "code"),
+            "name":      _t(printjob, "name"),
+            "cliche":    _t(printjob, "cliche"),
+            "clicherep": _t(printjob, "clicherep"),
+            "minjob":    _t(printjob, "minjob"),
+        }
+        for i in range(1, 8):
+            row[f"amountunder{i}"] = _t(printjob, f"amountunder{i}")
+            row[f"price{i}"]       = _t(printjob, f"price{i}")
+        rows.append(row)
+
+    logger.info(f"Parsed {len(rows)} print price rows")
+    return pd.DataFrame(rows)

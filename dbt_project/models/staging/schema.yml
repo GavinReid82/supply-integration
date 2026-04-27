@@ -29,3 +29,29 @@ models:
       - name: product_ref
         tests:
           - not_null
+
+  - name: stg_mko_print_options
+    description: One row per product / technique / area combination from the Makito print options feed.
+    columns:
+      - name: product_ref
+        tests:
+          - not_null
+      - name: teccode
+        tests:
+          - not_null
+      - name: areacode
+        tests:
+          - not_null
+
+  - name: stg_mko_print_prices
+    description: One row per print technique per quantity tier (up to 7 tiers). Global price list — not per product.
+    columns:
+      - name: teccode
+        tests:
+          - not_null
+      - name: tier
+        tests:
+          - not_null
+      - name: price_per_unit
+        tests:
+          - not_null

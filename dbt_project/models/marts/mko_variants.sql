@@ -1,1 +1,1 @@
-select * from {{ ref('stg_mko_variants') }}
+select * from {{ ref('variants') }} where supplier = 'mko'

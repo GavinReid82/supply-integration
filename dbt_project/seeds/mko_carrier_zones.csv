@@ -1,0 +1,73 @@
+country_code,country_name,zone,id_carrier,price_eur
+ES,Spain,1,73,5.00
+ES,Spain,1,74,7.50
+ES,Spain,1,210,0.00
+PT,Portugal,1,73,5.00
+PT,Portugal,1,74,7.50
+PT,Portugal,1,210,0.00
+NL,Netherlands,2,73,7.50
+NL,Netherlands,2,74,11.00
+NL,Netherlands,2,210,0.00
+BE,Belgium,2,73,7.50
+BE,Belgium,2,74,11.00
+BE,Belgium,2,210,0.00
+LU,Luxembourg,2,73,7.50
+LU,Luxembourg,2,74,11.00
+LU,Luxembourg,2,210,0.00
+FR,France,2,73,7.50
+FR,France,2,74,11.00
+FR,France,2,210,0.00
+DE,Germany,2,73,7.50
+DE,Germany,2,74,11.00
+DE,Germany,2,210,0.00
+AT,Austria,2,73,7.50
+AT,Austria,2,74,11.00
+AT,Austria,2,210,0.00
+IT,Italy,2,73,7.50
+IT,Italy,2,74,11.00
+IT,Italy,2,210,0.00
+CH,Switzerland,2,73,7.50
+CH,Switzerland,2,74,11.00
+CH,Switzerland,2,210,0.00
+IE,Ireland,2,73,7.50
+IE,Ireland,2,74,11.00
+IE,Ireland,2,210,0.00
+DK,Denmark,3,73,10.00
+DK,Denmark,3,74,14.00
+DK,Denmark,3,210,0.00
+FI,Finland,3,73,10.00
+FI,Finland,3,74,14.00
+FI,Finland,3,210,0.00
+SE,Sweden,3,73,10.00
+SE,Sweden,3,74,14.00
+SE,Sweden,3,210,0.00
+PL,Poland,3,73,10.00
+PL,Poland,3,74,14.00
+PL,Poland,3,210,0.00
+CZ,Czech Republic,3,73,10.00
+CZ,Czech Republic,3,74,14.00
+CZ,Czech Republic,3,210,0.00
+HU,Hungary,3,73,10.00
+HU,Hungary,3,74,14.00
+HU,Hungary,3,210,0.00
+RO,Romania,3,73,10.00
+RO,Romania,3,74,14.00
+RO,Romania,3,210,0.00
+BG,Bulgaria,3,73,10.00
+BG,Bulgaria,3,74,14.00
+BG,Bulgaria,3,210,0.00
+SK,Slovakia,3,73,10.00
+SK,Slovakia,3,74,14.00
+SK,Slovakia,3,210,0.00
+SI,Slovenia,3,73,10.00
+SI,Slovenia,3,74,14.00
+SI,Slovenia,3,210,0.00
+GB,United Kingdom,4,73,14.00
+GB,United Kingdom,4,74,18.00
+GB,United Kingdom,4,210,0.00
+NO,Norway,4,73,14.00
+NO,Norway,4,74,18.00
+NO,Norway,4,210,0.00
+IS,Iceland,4,73,14.00
+IS,Iceland,4,74,18.00
+IS,Iceland,4,210,0.00

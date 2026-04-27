@@ -17,3 +17,20 @@ models:
         description: Sum of stock across all warehouses.
       - name: in_stock_now
         description: True if any warehouse shows immediate availability.
+
+  - name: mko_print_options
+    description: One row per product / technique / area. Used by the order configurator to show available print options.
+    columns:
+      - name: product_ref
+        tests:
+          - not_null
+      - name: teccode
+        tests:
+          - not_null
+
+  - name: mko_print_prices
+    description: One row per print technique per quantity tier. Used by the order configurator to calculate print costs.
+    columns:
+      - name: teccode
+        tests:
+          - not_null

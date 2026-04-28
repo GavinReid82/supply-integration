@@ -266,3 +266,55 @@ canonical marts, the UI, and `run_pipeline.py` require no changes.
 - Unit tests for the extractor layer
 - Adding XDC as a second supplier to validate the architecture in practice
 - CI/CD with GitHub Actions
+
+---
+
+## 28 April 2026 — README, Docker Hardening, and Unit Tests
+
+**Focus:** Engineering quality — documentation, containerisation, and the test suite.
+
+The pipeline and UI have been functionally complete since 27 April. Today I turned
+attention to the things that make the project defensible in an interview: a clear
+README that explains the architecture to someone arriving cold, a containerisation
+setup that actually works cleanly, and a unit test suite that proves the extraction
+logic is correct without requiring API credentials or AWS access.
+
+**README.** Written from scratch. A review surfaced a factual error in the "Adding a
+new supplier" section — the step of updating the canonical mart SQL files (to add
+`UNION ALL` branches for the new intermediate models) had been omitted. That is a
+real change required when XDC is added, so the README now correctly lists five steps.
+
+**Docker.** The `Dockerfile` and `docker-compose.yml` were already committed. On
+review I added a `.dockerignore` — without it `COPY . .` would have included `.env`
+(credentials), `.venv/` (hundreds of MB), and `data/` (the DuckDB file). The
+`docker-compose.yml` correctly uses `condition: service_completed_successfully` for
+the UI's dependency on the pipeline, which is the right pattern for a single-writer
+database.
+
+**Unit tests.** 28 tests across four files, all passing in under a second. Every
+test mocks the I/O boundary — either the HTTP client or the S3 client — so the suite
+runs without network access or AWS credentials. The tests cover all five MKO endpoint
+parsers, the retry client, the S3 loader (including verifying the uploaded bytes are
+valid Parquet), and the `MkoExtractor` orchestration logic (verifying the correct
+date-partitioned S3 keys are used).
+
+A side fix: the project venv had been created when the directory was named
+`supply_integration/`. After the rename to `catalog_data_platform/`, the `pip`
+shebang was broken. The venv was recreated cleanly with `python3 -m venv .venv --clear`.
+
+### Current Project State
+
+| Component | Status |
+|---|---|
+| AWS S3 + IAM | Done |
+| Python extractor (MKO — 5 feeds) | Done |
+| dbt staging + intermediate + canonical marts | Done |
+| dbt seeds (carriers + carrier zones) | Done |
+| SupplierExtractor ABC + MkoExtractor | Done |
+| Streamlit UI (3 pages + landing) | Done |
+| Dockerfile + Docker Compose | Done |
+| README | Done |
+| Unit tests (extractor layer, 28 tests) | Done |
+| XDC as second supplier | Planned |
+| CI/CD with GitHub Actions | Planned |
+| Airflow DAG | Planned |

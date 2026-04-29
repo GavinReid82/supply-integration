@@ -11,7 +11,7 @@ Built as a portfolio project mirroring the supply_integration platform at Hellop
 ## Architecture
 
 ```
-Supplier APIs (MKO/Makito, ...)
+Supplier APIs (MKO/Makito, XDC/Xindao, ...)
   ↓
 SupplierExtractor adapters       extractor/
   ↓
@@ -30,22 +30,25 @@ Streamlit UI                     ui/
 
 ### Extraction layer
 
-- Fetches five MKO/Makito XML feeds: full product catalogue, tiered pricing, stock levels, print options, and print technique prices
+- **MKO:** fetches five XML feeds (product catalogue, tiered pricing, stock levels, print options, print technique prices)
+- **XDC:** fetches five XLSX feeds (product/variants in one file, pricing, print options, print prices, stock); normalises headers on read
 - Uploads raw data to S3 as date-partitioned Parquet files
 - `SupplierExtractor` abstract base class — adding a new supplier requires one new adapter class, zero changes to the orchestrator
 
 ### dbt transformation layer
 
-22 models across three layers, all targeting DuckDB via the `dbt-duckdb` adapter:
+33 models across three layers, all targeting DuckDB via the `dbt-duckdb` adapter:
 
 | Layer | Type | Purpose |
 |---|---|---|
-| `stg_mko_*` (6 models) | view | Type casting and light cleaning from S3 Parquet |
-| `int_mko_*` (6 models) | view | Normalise to canonical shape, add `supplier` column |
-| `catalog`, `variants`, `prices`, `print_options`, `print_prices` | table | Canonical, supplier-agnostic (unions all intermediate models) |
+| `stg_mko_*` (6 models) | view | Type casting and light cleaning from MKO S3 Parquet |
+| `stg_xdc_*` (5 models) | view | Type casting and unit conversion from XDC S3 Parquet |
+| `int_mko_*` (6 models) | view | Normalise to canonical shape, add `supplier='mko'` |
+| `int_xdc_*` (6 models) | view | Normalise to canonical shape, add `supplier='xdc'`; `int_xdc_products` derived from variants |
+| `catalog`, `variants`, `prices`, `print_options`, `print_prices` | table | Canonical, supplier-agnostic (conditional Jinja unions — XDC active when `XDC_BASE_URL` is set) |
 | `mko_*` (5 models) | table | Supplier-filtered views of the canonical tables |
 
-Seeds: `carriers.csv` (3 MKO carriers) and `mko_carrier_zones.csv` (72 rows, 24 countries × 3 carriers × 4 zones). 17 dbt tests, all passing.
+Seeds: `carriers.csv`, `mko_carrier_zones.csv`, `pcm_templates.csv`, `xdc_availability_thresholds.csv`. XDC models carry `{{ config(tags=["xdc"]) }}` — use `dbt run --exclude tag:xdc` for MKO-only builds.
 
 DuckDB reads S3 Parquet directly via the `httpfs` extension — no local copy of raw data.
 
@@ -76,25 +79,28 @@ DuckDB reads S3 Parquet directly via the `httpfs` extension — no local copy of
 ## Project structure
 
 ```
-supply_integration/
+catalog_data_platform/
 ├── run_pipeline.py               # extract → dbt seed/run/test
 ├── extractor/
 │   ├── base.py                   # SupplierConfig dataclass + SupplierExtractor ABC
-│   ├── mko.py                    # MkoExtractor adapter
-│   ├── endpoints.py              # fetch_products, fetch_price, fetch_stock, fetch_print, fetch_print_price
+│   ├── mko.py                    # MkoExtractor (XML feeds)
+│   ├── xdc.py                    # XdcExtractor (XLSX feeds)
+│   ├── endpoints.py              # MKO fetch_* functions
 │   ├── client.py                 # HTTP retry logic
 │   └── loader.py                 # S3 upload
 ├── dbt_project/
 │   ├── models/
-│   │   ├── staging/              # stg_mko_*.sql (6 models)
-│   │   ├── intermediate/         # int_mko_*.sql (6 models)
-│   │   └── marts/                # canonical + supplier-specific (10 models)
-│   └── seeds/                    # carriers.csv, mko_carrier_zones.csv
+│   │   ├── staging/              # stg_mko_*.sql (6), stg_xdc_*.sql (5)
+│   │   ├── intermediate/         # int_mko_*.sql (6), int_xdc_*.sql (6)
+│   │   └── marts/                # canonical (5) + supplier-specific (5)
+│   └── seeds/                    # carriers, mko_carrier_zones, pcm_templates, xdc_availability_thresholds
 ├── ui/
-│   ├── app.py                    # landing page
+│   ├── app.py                    # st.navigation router + sidebar page_links
 │   ├── db.py                     # shared query() function
-│   ├── supplier_reference.py     # build() dispatcher
+│   ├── supplier_reference.py     # build() dispatcher — MKO + XDC
+│   ├── basket.py                 # session state basket
 │   └── pages/
+│       ├── 0_Home.py             # landing page
 │       ├── 1_Catalog.py
 │       ├── 2_Configure_Order.py
 │       └── 3_Catman.py
@@ -175,10 +181,10 @@ The architecture is designed so that adding supplier XYZ requires changes in exa
 1. `extractor/xyz.py` — implement `XyzExtractor(SupplierExtractor)` with a `run(date)` method
 2. `dbt_project/models/staging/stg_xyz_*.sql` — type-cast the raw S3 feeds
 3. `dbt_project/models/intermediate/int_xyz_*.sql` — normalise to canonical shape, add `supplier = 'xyz'`
-4. `dbt_project/models/marts/*.sql` — add `UNION ALL select * from {{ ref('int_xyz_...') }}` to each of the five canonical mart CTEs
+4. `dbt_project/models/marts/*.sql` — add a conditional Jinja union branch (`{% if env_var('XYZ_BASE_URL', '') != '' %}`) to each canonical mart
 5. `ui/supplier_reference.py` — add an `_xyz()` case to the `build()` dispatcher
 
-`run_pipeline.py` and all UI pages require no changes.
+`run_pipeline.py` and all UI pages require no changes. XDC demonstrates this pattern end-to-end.
 
 ---
 
@@ -187,15 +193,16 @@ The architecture is designed so that adding supplier XYZ requires changes in exa
 | Component | Status |
 |---|---|
 | AWS S3 + IAM | Done |
-| Python extractor (MKO — 5 feeds) | Done |
-| dbt staging layer (6 models) | Done |
-| dbt intermediate layer (6 models) | Done |
-| dbt canonical marts (5 tables) | Done |
-| dbt seeds (carriers + carrier zones) | Done |
-| SupplierExtractor ABC + MkoExtractor | Done |
-| Streamlit UI (3 pages + landing) | Done |
+| Python extractor (MKO — 5 XML feeds) | Done |
+| Python extractor (XDC — 5 XLSX feeds) | Done |
+| dbt staging layer (MKO: 6 models, XDC: 5 models) | Done |
+| dbt intermediate layer (MKO: 6 models, XDC: 6 models) | Done |
+| dbt canonical marts (5 tables, conditional Jinja unions) | Done |
+| dbt seeds (carriers, carrier zones, pcm_templates, xdc_availability_thresholds) | Done |
+| SupplierExtractor ABC + MkoExtractor + XdcExtractor | Done |
+| Streamlit UI (4 pages + landing) | Done |
+| Shopping basket (session state, CSV export) | Done |
 | Dockerfile + Docker Compose | Done |
-| Unit tests for extractor layer | Planned |
-| XDC as second supplier | Planned |
+| Unit tests for extractor layer (28 tests) | Done |
 | Airflow DAG | Planned |
 | CI/CD with GitHub Actions | Planned |

@@ -9,7 +9,10 @@ models:
   - name: int_mko_variants
     description: >
       MKO variants normalised to canonical shape.
-      Adds supplier='mko'. One row per variant.
+      Contract: (1) adds supplier='mko', (2) renames to canonical column names (variant_id, image_url),
+      (3) computes is_available from product-level stock (MKO has no variant-level availability).
+      attribute_json is NULL — MKO has no variant-level attributes.
+      One row per variant.
 
   - name: int_mko_prices
     description: >
@@ -28,5 +31,7 @@ models:
 
   - name: int_mko_print_prices
     description: >
-      MKO print technique prices normalised to canonical shape.
-      Adds supplier='mko'. One row per technique/tier.
+      MKO print technique prices normalised to canonical schema.
+      amount_under (exclusive upper bound) converted to (quantity_min, quantity_max) pairs.
+      product_ref, color_count, area_min_mm2, area_max_mm2 are NULL — MKO pricing is global.
+      One row per technique/position/tier.

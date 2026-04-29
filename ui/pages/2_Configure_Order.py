@@ -1,10 +1,9 @@
 import pandas as pd
 import streamlit as st
 
+from basket import add_to_basket, show_basket
 from db import query
 from supplier_reference import build as build_supplier_ref
-
-st.set_page_config(page_title="Configure Order", page_icon="🖨️", layout="wide")
 
 COUNTRIES = [
     ("NL", "Netherlands"), ("DE", "Germany"), ("FR", "France"), ("BE", "Belgium"),
@@ -19,7 +18,7 @@ COUNTRIES = [
 @st.cache_data
 def load_variants(product_ref: str) -> pd.DataFrame:
     return query(
-        "SELECT matnr, colour_name, colour_code, size FROM variants WHERE product_ref = ? ORDER BY matnr",
+        "SELECT variant_id, colour_name, colour_code, size FROM variants WHERE product_ref = ? ORDER BY variant_id",
         [product_ref],
     )
 
@@ -27,7 +26,7 @@ def load_variants(product_ref: str) -> pd.DataFrame:
 @st.cache_data
 def load_print_options(product_ref: str) -> pd.DataFrame:
     return query(
-        """SELECT teccode, technique_name, areacode, area_name,
+        """SELECT teccode, technique_name, print_color, areacode, area_name,
                   area_width_cm, area_height_cm, area_image_url, included_colours
            FROM print_options
            WHERE product_ref = ?
@@ -37,21 +36,21 @@ def load_print_options(product_ref: str) -> pd.DataFrame:
 
 
 @st.cache_data
-def load_print_price_tier(teccode: str, quantity: int) -> pd.DataFrame:
+def load_print_price_tier(technique_code: str, quantity: int) -> pd.DataFrame:
     df = query(
-        """SELECT price_per_unit, cliche_cost, min_job_cost
+        """SELECT price_per_unit, setup_cost, min_job_cost
            FROM print_prices
-           WHERE teccode = ? AND amount_under > ?
-           ORDER BY tier ASC LIMIT 1""",
-        [teccode, quantity],
+           WHERE technique_code = ? AND quantity_min <= ?
+           ORDER BY quantity_min DESC LIMIT 1""",
+        [technique_code, quantity],
     )
     if df.empty:
         df = query(
-            """SELECT price_per_unit, cliche_cost, min_job_cost
+            """SELECT price_per_unit, setup_cost, min_job_cost
                FROM print_prices
-               WHERE teccode = ?
-               ORDER BY tier DESC LIMIT 1""",
-            [teccode],
+               WHERE technique_code = ?
+               ORDER BY quantity_min DESC LIMIT 1""",
+            [technique_code],
         )
     return df
 
@@ -98,15 +97,15 @@ st.title("🖨️ Configure Order")
 
 col_img, col_info = st.columns([1, 4])
 with col_img:
-    if product.get("imagemain"):
-        st.image(product["imagemain"], width=120)
+    if product.get("image_url"):
+        st.image(product["image_url"], width=120)
 with col_info:
     st.markdown(f"### {product_name}")
     st.markdown(
         f"**Ref:** {product_ref}"
         f"&nbsp;&nbsp;|&nbsp;&nbsp;**Type:** {product.get('product_type') or '—'}"
-        f"&nbsp;&nbsp;|&nbsp;&nbsp;**Category:** {product.get('category_name_1') or '—'}"
-        f" › {product.get('category_name_2') or '—'}"
+        f"&nbsp;&nbsp;|&nbsp;&nbsp;**Category:** {product.get('category') or '—'}"
+        f" › {product.get('subcategory') or '—'}"
     )
     if st.button("← Back to Catalog"):
         st.switch_page("pages/1_Catalog.py")
@@ -125,12 +124,12 @@ with left:
         st.stop()
 
     variant_labels = variants_df.apply(
-        lambda r: f"{r['matnr']} — {r['colour_name'] or ''} {r['size'] or ''}".strip(),
+        lambda r: f"{r['variant_id']} — {r['colour_name'] or ''} {r['size'] or ''}".strip(),
         axis=1,
     ).tolist()
     variant_idx = st.selectbox("Variant", range(len(variant_labels)), format_func=lambda i: variant_labels[i])
     selected_variant = variants_df.iloc[variant_idx]
-    variant_id = selected_variant["matnr"]
+    variant_id = selected_variant["variant_id"]
 
     # Step 2 — Quantity
     st.subheader("2. Quantity")
@@ -144,8 +143,11 @@ with left:
     if print_options_df.empty:
         st.caption("No print options available for this product.")
     else:
+        def _color_label(pc: int) -> str:
+            return "Full Color" if pc == -1 else f"{pc} colour{'s' if pc != 1 else ''}"
+
         option_labels = print_options_df.apply(
-            lambda r: f"{r['technique_name']} — {r['area_name']}", axis=1
+            lambda r: f"{r['technique_name']} ({_color_label(int(r['print_color']))}) — {r['area_name']}", axis=1
         ).tolist()
         selected_idxs = st.multiselect(
             "Select print option(s)",
@@ -196,7 +198,7 @@ with right:
     # ── Price breakdown ───────────────────────────────────────────────────────
     st.subheader("Price Breakdown")
 
-    unit_price   = load_product_price_tier(product_ref, quantity)
+    unit_price    = load_product_price_tier(product_ref, quantity)
     product_total = (unit_price * quantity) if unit_price else 0.0
 
     print_total     = 0.0
@@ -205,7 +207,7 @@ with right:
         pp = load_print_price_tier(p["teccode"], quantity)
         if not pp.empty:
             per_unit  = float(pp.iloc[0]["price_per_unit"])
-            cliche    = float(pp.iloc[0]["cliche_cost"])
+            cliche    = float(pp.iloc[0]["setup_cost"])
             min_job   = float(pp.iloc[0]["min_job_cost"])
             job_cost  = max(min_job, per_unit * quantity)
             total     = job_cost + cliche
@@ -249,10 +251,45 @@ with right:
     )
 
     st.code(supplier_ref, language=None)
-    st.caption("Copy this reference when placing the order with Makito.")
+    st.caption("Copy this reference when placing the order with mko.")
 
     if selected_carrier is not None:
         st.markdown(
             f"**Carrier ID:** `{int(selected_carrier['id_carrier'])}` "
             f"— {selected_carrier['carrier_name']}"
         )
+
+    st.divider()
+
+    # ── Add to basket ─────────────────────────────────────────────────────────
+    can_add = selected_carrier is not None and unit_price is not None
+    if st.button(
+        "🛒 Add to Basket",
+        use_container_width=True,
+        type="primary",
+        disabled=not can_add,
+    ):
+        prints_label = (
+            " | ".join(f"{p['technique_name']} ({p['area_name']})" for p in selected_prints)
+            if selected_prints else "No print"
+        )
+        add_to_basket({
+            "supplier":      "mko",
+            "product_ref":   product_ref,
+            "product_name":  product_name,
+            "variant_matnr": str(variant_id),
+            "variant_label": variant_labels[variant_idx],
+            "quantity":      int(quantity),
+            "prints_label":  prints_label,
+            "carrier_name":  selected_carrier["carrier_name"],
+            "supplier_ref":  supplier_ref,
+            "unit_price":    unit_price or 0.0,
+            "product_total": product_total,
+            "print_total":   print_total,
+            "carrier_cost":  carrier_cost,
+            "grand_total":   grand_total,
+        })
+        st.success(f"✓ {product_name} added to basket.")
+
+# ── Basket ────────────────────────────────────────────────────────────────────
+show_basket()

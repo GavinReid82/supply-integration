@@ -1,37 +1,38 @@
 import re
-from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-import yaml
 
 from db import query
 
-st.set_page_config(page_title="Category Management", page_icon="📊", layout="wide")
-
-QUANTITY_CODES_PATH = Path(__file__).parent.parent.parent / "business_logic" / "quantity_codes.yaml"
-
 
 @st.cache_data
-def load_qty_config() -> dict:
-    with open(QUANTITY_CODES_PATH) as f:
-        return yaml.safe_load(f)
+def load_templates() -> pd.DataFrame:
+    return query(
+        "SELECT template_name, template_category, quantity_code, catalog_category FROM pcm_templates ORDER BY template_category, template_name"
+    )
 
 
 @st.cache_data
 def load_catalog() -> pd.DataFrame:
     return query(
-        """SELECT product_ref, product_name, category_name_1, category_name_2, supplier
+        """SELECT product_ref, product_name, category, subcategory, supplier
            FROM catalog ORDER BY product_name"""
     )
 
 
 @st.cache_data
-def load_print_options(product_ref: str) -> pd.DataFrame:
+def load_print_options(product_ref: str, supplier: str) -> pd.DataFrame:
+    if supplier == "All":
+        return query(
+            """SELECT DISTINCT teccode, technique_name, print_color, areacode, area_name, area_width_cm, area_height_cm
+               FROM print_options WHERE product_ref = ? ORDER BY area_name, technique_name""",
+            [product_ref],
+        )
     return query(
-        """SELECT teccode, technique_name, areacode, area_name, area_width_cm, area_height_cm
-           FROM print_options WHERE product_ref = ? ORDER BY technique_name, area_name""",
-        [product_ref],
+        """SELECT teccode, technique_name, print_color, areacode, area_name, area_width_cm, area_height_cm
+           FROM print_options WHERE product_ref = ? AND supplier = ? ORDER BY area_name, technique_name""",
+        [product_ref, supplier],
     )
 
 
@@ -46,38 +47,57 @@ def sk(field: str, ref: str) -> str:
 # ── Header ────────────────────────────────────────────────────────────────────
 st.title("📊 Category Management")
 if st.button("← Home"):
-    st.switch_page("app.py")
+    st.switch_page("pages/0_Home.py")
 
 st.divider()
 
 # ── Config + filters (sidebar) ────────────────────────────────────────────────
-qty_config = load_qty_config()
+templates_df = load_templates()
 catalog_df = load_catalog()
 
 st.sidebar.title("Session Setup")
 
-supplier = st.sidebar.selectbox("Supplier", ["mko"])
-templates = list(qty_config.get(supplier, {}).keys())
-template = st.sidebar.selectbox("PCM Template", ["(select a template)"] + templates)
-default_qty_code = qty_config.get(supplier, {}).get(template, "")
+supplier = st.sidebar.selectbox("Supplier", ["All", "mko", "xdc"])
+
+# Filter catalog to the selected supplier (or keep all)
+supplier_catalog = catalog_df if supplier == "All" else catalog_df[catalog_df["supplier"] == supplier]
 
 st.sidebar.divider()
-st.sidebar.title("Product Filter")
+st.sidebar.subheader("Product Filter")
 
-cats = ["All"] + sorted(catalog_df["category_name_1"].dropna().unique().tolist())
+cats = ["All"] + sorted(supplier_catalog["category"].dropna().unique().tolist())
 sel_cat = st.sidebar.selectbox("Category", cats)
-filtered = catalog_df.copy()
+filtered = supplier_catalog.copy()
 if sel_cat != "All":
-    filtered = filtered[filtered["category_name_1"] == sel_cat]
+    filtered = filtered[filtered["category"] == sel_cat]
 
-subcats = ["All"] + sorted(filtered["category_name_2"].dropna().unique().tolist())
+subcats = ["All"] + sorted(filtered["subcategory"].dropna().unique().tolist())
 sel_sub = st.sidebar.selectbox("Sub-category", subcats)
 if sel_sub != "All":
-    filtered = filtered[filtered["category_name_2"] == sel_sub]
+    filtered = filtered[filtered["subcategory"] == sel_sub]
 
 search = st.sidebar.text_input("Search name")
 if search:
     filtered = filtered[filtered["product_name"].str.contains(search, case=False, na=False)]
+
+st.sidebar.divider()
+st.sidebar.subheader("PCM Template")
+
+# Narrow the template list to those whose catalog_category matches the selected
+# product category. Falls back to all templates when no match exists.
+if sel_cat != "All":
+    cat_matched = templates_df[templates_df["catalog_category"] == sel_cat]
+    tmpl_pool = cat_matched if not cat_matched.empty else templates_df
+else:
+    tmpl_pool = templates_df
+
+tmpl_cat_opts = ["All"] + sorted(tmpl_pool["template_category"].unique().tolist())
+tmpl_cat = st.sidebar.selectbox("Template Category", tmpl_cat_opts, key="tmpl_cat")
+filtered_tmpls = tmpl_pool if tmpl_cat == "All" else tmpl_pool[tmpl_pool["template_category"] == tmpl_cat]
+
+template = st.sidebar.selectbox("PCM Template", ["(select a template)"] + filtered_tmpls["template_name"].tolist())
+qty_row = templates_df[templates_df["template_name"] == template]
+default_qty_code = qty_row.iloc[0]["quantity_code"] if not qty_row.empty else ""
 
 # ── Initialise session state for newly-visible products ───────────────────────
 for _, row in filtered.iterrows():
@@ -92,115 +112,134 @@ for _, row in filtered.iterrows():
         st.session_state[sk("prints", ref)] = []
 
 # ── Product table ─────────────────────────────────────────────────────────────
-left, right = st.columns([3, 2])
+n_selected = sum(
+    1 for ref in supplier_catalog["product_ref"]
+    if st.session_state.get(sk("sel", ref), False)
+)
+st.subheader(f"Products — {len(filtered):,} shown · {n_selected:,} selected")
 
-with left:
-    n_selected = sum(
-        1 for ref in catalog_df["product_ref"]
-        if st.session_state.get(sk("sel", ref), False)
+if filtered.empty:
+    st.info("No products match the current filters.")
+elif len(filtered) > 300:
+    st.warning(f"{len(filtered):,} products — narrow the filter to browse.")
+else:
+    editor_df = pd.DataFrame({
+        "Selected":  [st.session_state[sk("sel",  r)] for r in filtered["product_ref"]],
+        "Product":   filtered["product_name"].values,
+        "Ref":       filtered["product_ref"].values,
+        "Slug":      [st.session_state[sk("slug", r)] for r in filtered["product_ref"]],
+        "Qty Code":  [st.session_state.get(sk("qty", r)) or default_qty_code for r in filtered["product_ref"]],
+    })
+
+    edited = st.data_editor(
+        editor_df,
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "Selected":  st.column_config.CheckboxColumn("✓", width="small"),
+            "Product":   st.column_config.TextColumn("Product", disabled=True),
+            "Ref":       st.column_config.TextColumn("Ref", disabled=True, width="small"),
+            "Slug":      st.column_config.TextColumn("Slug"),
+            "Qty Code":  st.column_config.TextColumn("Qty Code"),
+        },
+        key=f"catman_editor_{sel_cat}_{sel_sub}_{search}_{template}",
     )
-    st.subheader(f"Products — {len(filtered):,} shown · {n_selected:,} selected")
 
-    if filtered.empty:
-        st.info("No products match the current filters.")
-    elif len(filtered) > 300:
-        st.warning(f"{len(filtered):,} products — narrow the filter to browse.")
-    else:
-        editor_df = pd.DataFrame({
-            "Selected":  [st.session_state[sk("sel",  r)] for r in filtered["product_ref"]],
-            "Product":   filtered["product_name"].values,
-            "Ref":       filtered["product_ref"].values,
-            "Slug":      [st.session_state[sk("slug", r)] for r in filtered["product_ref"]],
-            "Qty Code":  [st.session_state.get(sk("qty", r)) or default_qty_code for r in filtered["product_ref"]],
-        })
+    for i, ref in enumerate(filtered["product_ref"].values):
+        st.session_state[sk("sel",  ref)] = bool(edited.iloc[i]["Selected"])
+        st.session_state[sk("slug", ref)] = str(edited.iloc[i]["Slug"] or "")
+        st.session_state[sk("qty",  ref)] = str(edited.iloc[i]["Qty Code"] or "")
 
-        edited = st.data_editor(
-            editor_df,
-            use_container_width=True,
-            hide_index=True,
-            column_config={
-                "Selected":  st.column_config.CheckboxColumn("✓", width="small"),
-                "Product":   st.column_config.TextColumn("Product", disabled=True),
-                "Ref":       st.column_config.TextColumn("Ref", disabled=True, width="small"),
-                "Slug":      st.column_config.TextColumn("Slug"),
-                "Qty Code":  st.column_config.TextColumn("Qty Code"),
-            },
-            key=f"catman_editor_{sel_cat}_{sel_sub}_{search}_{template}",
+# ── Print options (stacked below products) ────────────────────────────────────
+st.divider()
+st.subheader("Print Options")
+
+all_selected_refs = [
+    ref for ref in supplier_catalog["product_ref"]
+    if st.session_state.get(sk("sel", ref), False)
+]
+
+if not all_selected_refs:
+    st.info("Select products above, then configure their print options here.")
+else:
+    ref_to_name = dict(zip(supplier_catalog["product_ref"], supplier_catalog["product_name"]))
+    configure_ref = st.selectbox(
+        "Configure print for:",
+        all_selected_refs,
+        format_func=lambda r: ref_to_name.get(r, r),
+    )
+
+    if configure_ref:
+        opts_df = load_print_options(configure_ref, supplier)
+        current = st.session_state[sk("prints", configure_ref)]
+
+        new_qty = st.text_input(
+            "Qty Code",
+            value=st.session_state.get(sk("qty", configure_ref), ""),
+            key=f"qty_input_{configure_ref}",
         )
+        st.session_state[sk("qty", configure_ref)] = new_qty
 
-        # Sync edits back to individual session_state keys
-        for i, ref in enumerate(filtered["product_ref"].values):
-            st.session_state[sk("sel",  ref)] = bool(edited.iloc[i]["Selected"])
-            st.session_state[sk("slug", ref)] = str(edited.iloc[i]["Slug"] or "")
-            st.session_state[sk("qty",  ref)] = str(edited.iloc[i]["Qty Code"] or "")
+        new_prints = []
 
-# ── Print options panel ────────────────────────────────────────────────────────
-with right:
-    st.subheader("Print Options")
+        # "No print" row — always available, for sample requests
+        no_key = ("no", "no")
+        if st.checkbox(
+            "No print (samples only)",
+            value=no_key in current,
+            key=f"noprint_{configure_ref}",
+        ):
+            new_prints.append(no_key)
 
-    # All currently selected products (across all filters)
-    all_selected_refs = [
-        ref for ref in catalog_df["product_ref"]
-        if st.session_state.get(sk("sel", ref), False)
-    ]
+        if opts_df.empty:
+            st.caption("No print options found for this product.")
+        else:
+            st.caption("Select print positions, then choose which techniques to offer for each.")
 
-    if not all_selected_refs:
-        st.info("Select products on the left, then configure their print options here.")
-    else:
-        ref_to_name = dict(zip(catalog_df["product_ref"], catalog_df["product_name"]))
-        configure_ref = st.selectbox(
-            "Configure print for:",
-            all_selected_refs,
-            format_func=lambda r: ref_to_name.get(r, r),
-        )
+            # Group by area: position first, techniques second
+            for areacode in opts_df["areacode"].unique():
+                area_rows = opts_df[opts_df["areacode"] == areacode]
+                area_name = area_rows.iloc[0]["area_name"]
+                w = area_rows.iloc[0]["area_width_cm"]
+                h = area_rows.iloc[0]["area_height_cm"]
+                dims = f"{w:.0f}×{h:.0f} cm" if (pd.notna(w) and pd.notna(h)) else "—"
 
-        if configure_ref:
-            opts_df = load_print_options(configure_ref)
-            current = st.session_state[sk("prints", configure_ref)]
+                area_has_selection = any(ac == areacode for (_, ac) in current)
 
-            st.caption("Tick the print options to offer for this product (dimensions pre-filled to maximum).")
+                area_selected = st.checkbox(
+                    f"**{area_name}** ({dims})",
+                    value=area_has_selection,
+                    key=f"area_{configure_ref}_{areacode}",
+                )
 
-            new_prints = []
+                if area_selected:
+                    for row_idx, (_, opt) in enumerate(area_rows.iterrows()):
+                        key_pair = (opt["teccode"], areacode)
+                        pc = int(opt["print_color"])
+                        color_label = "Full Color" if pc == -1 else f"{pc} colour{'s' if pc != 1 else ''}"
+                        _, tech_col = st.columns([1, 12])
+                        with tech_col:
+                            if st.checkbox(
+                                f"↳ {opt['technique_name']} ({color_label})",
+                                value=key_pair in current,
+                                key=f"opt_{configure_ref}_{opt['teccode']}_{areacode}_{row_idx}",
+                            ):
+                                new_prints.append(key_pair)
 
-            # "No print" row — always available, for sample requests
-            no_key = ("no", "no")
-            if st.checkbox(
-                "No print (samples only)",
-                value=no_key in current,
-                key=f"noprint_{configure_ref}",
-            ):
-                new_prints.append(no_key)
-
-            if opts_df.empty:
-                st.caption("No print options found for this product.")
-            else:
-                for _, opt in opts_df.iterrows():
-                    key = (opt["teccode"], opt["areacode"])
-                    w = opt["area_width_cm"]
-                    h = opt["area_height_cm"]
-                    dims = f"{w:.0f}×{h:.0f} cm" if (w or h) else "—"
-                    label = f"{opt['technique_name']} — {opt['area_name']} ({dims})"
-                    if st.checkbox(
-                        label,
-                        value=key in current,
-                        key=f"opt_{configure_ref}_{opt['teccode']}_{opt['areacode']}",
-                    ):
-                        new_prints.append(key)
-
-            st.session_state[sk("prints", configure_ref)] = new_prints
+        st.session_state[sk("prints", configure_ref)] = new_prints
 
 # ── Validation + export ────────────────────────────────────────────────────────
 st.divider()
 
 all_selected_refs = [
-    ref for ref in catalog_df["product_ref"]
+    ref for ref in supplier_catalog["product_ref"]
     if st.session_state.get(sk("sel", ref), False)
 ]
 
 if not all_selected_refs:
     st.caption("No products selected yet.")
 else:
-    ref_to_name = dict(zip(catalog_df["product_ref"], catalog_df["product_name"]))
+    ref_to_name = dict(zip(supplier_catalog["product_ref"], supplier_catalog["product_name"]))
 
     errors = []
     for ref in all_selected_refs:
@@ -215,7 +254,6 @@ else:
         for e in errors:
             st.error(e, icon="⚠️")
     else:
-        # Build export rows
         export_rows = []
         for ref in all_selected_refs:
             slug      = st.session_state[sk("slug", ref)]
@@ -225,7 +263,7 @@ else:
             if not prints:
                 continue
 
-            opts_df = load_print_options(ref)
+            opts_df = load_print_options(ref, supplier)
             opts_map = {
                 (r["teccode"], r["areacode"]): r
                 for _, r in opts_df.iterrows()
@@ -262,7 +300,7 @@ else:
         csv_bytes = export_df.to_csv(index=False).encode()
 
         tmpl_slug = template.replace(" ", "_").replace("(", "").replace(")", "") if template != "(select a template)" else "export"
-        filename  = f"catman_{supplier}_{tmpl_slug}.csv"
+        filename  = f"catman_{supplier.lower()}_{tmpl_slug}.csv"
 
         col_btn, col_info = st.columns([1, 3])
         with col_btn:

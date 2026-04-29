@@ -37,6 +37,24 @@ EXTRACTOR_REGISTRY = {
     "mko": MkoExtractor,
 }
 
+# XDC is optional: only active when XDC_BASE_URL is configured
+if os.environ.get("XDC_BASE_URL"):
+    from extractor.xdc import XdcExtractor
+    _xdc_base = os.environ["XDC_BASE_URL"]
+    SUPPLIERS.append(
+        SupplierConfig(
+            name="xdc",
+            endpoints={
+                "product":            f"{_xdc_base}/{os.environ['XDC_URL_SUFFIX_PRODUCT']}",
+                "product_price":      f"{_xdc_base}/{os.environ['XDC_URL_SUFFIX_PRODUCT_PRICE']}",
+                "print_option":       f"{_xdc_base}/{os.environ['XDC_URL_SUFFIX_PRINT_OPTION']}",
+                "print_option_price": f"{_xdc_base}/{os.environ['XDC_URL_SUFFIX_PRINT_OPTION_PRICE']}",
+                "stock":              f"{_xdc_base}/{os.environ['XDC_URL_SUFFIX_STOCK']}",
+            },
+        )
+    )
+    EXTRACTOR_REGISTRY["xdc"] = XdcExtractor
+
 
 def extract():
     logger.info("=== EXTRACT ===")

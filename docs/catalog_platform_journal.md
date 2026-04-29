@@ -318,3 +318,130 @@ shebang was broken. The venv was recreated cleanly with `python3 -m venv .venv -
 | XDC as second supplier | Planned |
 | CI/CD with GitHub Actions | Planned |
 | Airflow DAG | Planned |
+
+---
+
+## 28 April 2026 — UI Navigation, Print Colour Data Model, and Shopping Basket
+
+**Focus:** Refining both UI workflows and fixing data model issues surfaced by real
+usage.
+
+This session produced no new pipeline stages or API endpoints. The focus was entirely
+on making the existing Bespoke and Category Management tools work correctly and look
+credible.
+
+### Navigation
+
+Replaced Streamlit's auto-generated sidebar with `st.navigation(position="hidden")` and
+explicit `st.sidebar.page_link()` calls. This hides the Configure Order page from the
+sidebar (it is only reachable via the Catalog page) while still keeping it registered
+so `st.switch_page()` resolves it. `st.set_page_config()` now lives only in `app.py`.
+
+### Print colour data model
+
+The `technique_name` field in `print_options` had `(FULLCOLOR)` embedded as a text
+suffix. This is a data modelling mistake — colour type is a separate fact from
+technique name. I derived a new `print_color BIGINT` column: `-1` for full colour, the
+spot-colour count otherwise. The technique names are cleaned with `REGEXP_REPLACE`.
+
+A subtle dbt/SQL point: a column alias defined in the same SELECT list is not visible
+to other expressions in that list. The CASE WHEN that produces `print_color` had to
+reference the original `technique_name` column, not the cleaned alias.
+
+### Variant deduplication
+
+Variants were appearing twice in the UI. The cause: the staging model reads from an
+S3 glob matching all date-partitioned directories. After two pipeline runs, every row
+was doubled. Fixed with `QUALIFY ROW_NUMBER() OVER (PARTITION BY product_ref, matnr
+ORDER BY 1) = 1` in `int_mko_variants.sql`.
+
+### Shopping basket
+
+Users can now add configured products to a basket that persists across page switches,
+then export all items as a CSV. The implementation uses `st.session_state` (browser
+session scope — no external storage needed) and a new `ui/basket.py` shared module
+imported by both the Catalog and Configure Order pages. Prices are captured at add
+time, not recalculated on display.
+
+### Catman print options
+
+Restructured from a flat list to an area-first hierarchy: select a print position first,
+then choose techniques beneath it. Techniques are indented using `st.columns([1, 12])`.
+The quantity code input is now also available in the print options panel without
+needing to scroll back up to the products table.
+
+### Current Project State (end of 28 April, session 2)
+
+| Component | Status |
+|---|---|
+| AWS S3 + IAM | Done |
+| Python extractor (MKO — 5 feeds) | Done |
+| dbt staging + intermediate + canonical marts | Done |
+| dbt seeds (carriers + carrier zones) | Done |
+| SupplierExtractor ABC + MkoExtractor | Done |
+| Streamlit UI (4 pages — Home, Catalog, Configure Order, Catman) | Done |
+| Shopping basket (session state, CSV export) | Done |
+| Dockerfile + Docker Compose | Done |
+| README | Done |
+| Unit tests (extractor layer, 28 tests) | Done |
+| XDC as second supplier | Done |
+| CI/CD with GitHub Actions | Planned |
+| Airflow DAG | Planned |
+
+---
+
+## 29 April 2026 — XDC as a Second Supplier
+
+**Focus:** Validating the multi-supplier architecture by adding Xindao (XDC) as a real second supplier.
+
+This session proved that the architecture designed on 27 April works in practice. Adding XDC required exactly the five changes described in the README: one new extractor adapter, five new staging models, six new intermediate models, conditional mart unions, and one new supplier reference builder. `run_pipeline.py`, the UI pages, and the canonical mart schemas required no changes.
+
+### What I Built
+
+**`extractor/xdc.py`** — `XdcExtractor(SupplierExtractor)`. Unlike MKO, XDC provides data as XLSX files at authenticated full URLs rather than XML. `get_with_retry()` fetches the raw bytes; `pd.read_excel(io.BytesIO(raw))` parses them; column headers are normalised (lowercase, spaces → underscores) before upload. The five feeds mirror the MKO structure: product (contains both product and variant data in one file), product_price, print_option, print_option_price, and stock.
+
+**Staging models** — Five `stg_xdc_*` models. XDC has no separate product table: the product XLSX has one row per colour/size variant, with product-level fields repeated across all variants. Dimensions arrive in centimetres (×10 for mm) and weight in grams (/1000 for kg).
+
+**Intermediate models** — Six `int_xdc_*` models. `int_xdc_products.sql` *derives* a product table from the variant feed using `ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY variant_id) = 1` — the lexically-first variant represents the product. `int_xdc_variants.sql` implements two-tier availability logic: a variant is available if its `productlifecycle` is not `'Outlet'`, or if its stock exceeds a per-subcategory threshold from the `xdc_availability_thresholds` seed.
+
+**Canonical mart models** — Updated to use conditional Jinja (`{% if env_var('XDC_BASE_URL', '') != '' %} union all ... {% endif %}`) instead of static `UNION ALL`. A `dbt run` without XDC credentials builds MKO-only cleanly. All XDC models carry `{{ config(tags=["xdc"]) }}` so `dbt run --exclude tag:xdc` skips them explicitly.
+
+**`run_pipeline.py`** — XDC is opt-in. The `XdcExtractor` and its config are only loaded when `XDC_BASE_URL` is set in the environment. The extract loop remains unchanged: `for config in SUPPLIERS: EXTRACTOR_REGISTRY[config.name](config, BUCKET).run(TODAY)`.
+
+**`supplier_reference.py`** — `_xdc()` builder added. XDC currently uses the same reference format as MKO (`variant_id__technique#position`), so the implementation is a thin wrapper.
+
+**New seeds** — `pcm_templates.csv` and `xdc_availability_thresholds.csv`. The thresholds table defines per-subcategory stock minimums for Outlet-lifecycle products: Water bottles 250, Plastic pens 500, Bags 50, etc.
+
+### Key Concepts
+
+- **Deriving a product table from variants:** XDC is structured around colour/size combinations, not discrete products. Using rank-1-per-product is a standard technique for flattening a variant-first schema into the canonical product shape without losing any data.
+- **Conditional dbt Jinja:** `{% if env_var(...) %}` is resolved at compile time — the generated SQL either includes or excludes the XDC branch before execution. This is cleaner than Python-side branching; the SQL itself changes shape based on configuration.
+- **dbt tags:** `{{ config(tags=["xdc"]) }}` enables `dbt run --exclude tag:xdc` for MKO-only builds — critical for developing without XDC credentials and for faster iteration.
+- **Availability thresholds as a seed:** per-subcategory stock floors are editorial decisions that will change. A CSV seed is version-controlled, reviewable, and editable without touching SQL.
+
+### Issues Encountered
+
+1. XDC column names include spaces and mixed case in the raw XLSX. Normalised on read: `[c.strip().lower().replace(" ", "_") for c in df.columns]`.
+2. XDC has no dedicated product table — `product_id` (`modelcode`) is shared across all variants of a product. The intermediate layer derives the product row from the lexically-first variant.
+
+### Current Project State
+
+| Component | Status |
+|---|---|
+| AWS S3 + IAM | Done |
+| Python extractor (MKO — 5 XML feeds) | Done |
+| Python extractor (XDC — 5 XLSX feeds) | Done |
+| dbt staging layer (MKO: 6 models, XDC: 5 models) | Done |
+| dbt intermediate layer (MKO: 6 models, XDC: 6 models) | Done |
+| dbt canonical mart models (conditional Jinja unions) | Done |
+| dbt seeds (carriers, carrier zones, pcm_templates, xdc_availability_thresholds) | Done |
+| SupplierExtractor ABC + MkoExtractor + XdcExtractor | Done |
+| Shared UI modules (db.py, supplier_reference.py, basket.py) | Done |
+| Streamlit UI (4 pages — Home, Catalog, Configure Order, Catman) | Done |
+| Shopping basket (session state, CSV export) | Done |
+| Dockerfile + Docker Compose | Done |
+| README | Done |
+| Unit tests (extractor layer, 28 tests) | Done |
+| XDC supplier reference builder | Done |
+| Airflow DAG (replace run_pipeline.py) | Not started |
+| CI/CD with GitHub Actions | Not started |

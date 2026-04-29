@@ -1,13 +1,8 @@
 import pandas as pd
 import streamlit as st
 
+from basket import show_basket
 from db import query
-
-st.set_page_config(
-    page_title="MKO Product Catalog",
-    page_icon="📦",
-    layout="wide",
-)
 
 
 @st.cache_data
@@ -26,7 +21,7 @@ def load_prices(product_ref: str) -> pd.DataFrame:
 @st.cache_data
 def load_variants(product_ref: str) -> pd.DataFrame:
     return query(
-        "SELECT matnr, colour_name, colour_code, size FROM variants WHERE product_ref = ? ORDER BY matnr",
+        "SELECT variant_id, colour_name, colour_code, size FROM variants WHERE product_ref = ? ORDER BY variant_id",
         [product_ref],
     )
 
@@ -36,104 +31,101 @@ df = load_catalog()
 # ── Sidebar filters ──────────────────────────────────────────────────────────
 st.sidebar.title("Filters")
 
-categories = ["All"] + sorted(df["category_name_1"].dropna().unique().tolist())
+suppliers = ["All"] + sorted(df["supplier"].dropna().unique().tolist())
+selected_supplier = st.sidebar.selectbox("Supplier", suppliers)
+
+product_id_search = st.sidebar.text_input("Product ID", placeholder="e.g. 4591")
+
+categories = ["All"] + sorted(df["category"].dropna().unique().tolist())
 selected_cat = st.sidebar.selectbox("Category", categories)
 
 sub_options = ["All"]
 if selected_cat != "All":
-    subs = df[df["category_name_1"] == selected_cat]["category_name_2"].dropna().unique().tolist()
+    subs = df[df["category"] == selected_cat]["subcategory"].dropna().unique().tolist()
     sub_options += sorted(subs)
 selected_sub = st.sidebar.selectbox("Sub-category", sub_options)
 
 in_stock_only = st.sidebar.checkbox("In stock now only", value=False)
 
-price_min = float(df["min_unit_price"].min())
-price_max = float(df["min_unit_price"].max())
-price_range = st.sidebar.slider(
-    "Price range (€)",
-    min_value=price_min,
-    max_value=price_max,
-    value=(price_min, price_max),
-    step=0.10,
-)
-
 # ── Apply filters ────────────────────────────────────────────────────────────
 filtered = df.copy()
+if selected_supplier != "All":
+    filtered = filtered[filtered["supplier"] == selected_supplier]
+if product_id_search:
+    filtered = filtered[filtered["product_ref"].str.contains(product_id_search, case=False, na=False)]
 if selected_cat != "All":
-    filtered = filtered[filtered["category_name_1"] == selected_cat]
+    filtered = filtered[filtered["category"] == selected_cat]
 if selected_sub != "All":
-    filtered = filtered[filtered["category_name_2"] == selected_sub]
+    filtered = filtered[filtered["subcategory"] == selected_sub]
 if in_stock_only:
-    filtered = filtered[filtered["in_stock_now"] == True]
-filtered = filtered[
-    (filtered["min_unit_price"] >= price_range[0]) &
-    (filtered["min_unit_price"] <= price_range[1])
-]
+    filtered = filtered[filtered["total_stock_qty"].fillna(0) > 0]
 
 # ── Header ───────────────────────────────────────────────────────────────────
-st.title("📦 Makito Product Catalog")
-st.caption(f"Live data from Makito API via AWS S3 → dbt → DuckDB")
-if st.button("← Back to Home"):
-    st.switch_page("app.py")
+st.title("📦 Product Catalog")
 
 # ── Metrics ──────────────────────────────────────────────────────────────────
-col1, col2, col3, col4 = st.columns(4)
+col1, col2 = st.columns(2)
 col1.metric("Products shown", f"{len(filtered):,}")
-col2.metric("In stock now", f"{filtered['in_stock_now'].sum():,}")
-col3.metric("Min price", f"€{filtered['min_unit_price'].min():.2f}" if not filtered.empty else "—")
-col4.metric("Max price", f"€{filtered['min_unit_price'].max():.2f}" if not filtered.empty else "—")
+col2.metric("In stock now", f"{(filtered['total_stock_qty'].fillna(0) > 0).sum():,}")
 
 st.divider()
 
-# ── Main layout: table + detail panel ────────────────────────────────────────
-left, right = st.columns([2, 1])
+# ── Products table ────────────────────────────────────────────────────────────
+st.subheader("Products")
 
-with left:
-    st.subheader("Products")
+display = filtered[[
+    "product_ref", "product_name", "product_type",
+    "category", "subcategory",
+    "min_unit_price", "total_stock_qty", "min_order_qty",
+]].copy()
 
-    display = filtered[[
-        "product_ref", "product_name", "product_type",
-        "category_name_1", "category_name_2",
-        "min_unit_price", "total_stock_qty", "in_stock_now",
-        "min_order_qty",
-    ]].rename(columns={
-        "product_ref":      "Ref",
-        "product_name":     "Name",
-        "product_type":     "Type",
-        "category_name_1":  "Category",
-        "category_name_2":  "Sub-category",
-        "min_unit_price":   "Price (€)",
-        "total_stock_qty":  "Stock",
-        "in_stock_now":     "In stock",
-        "min_order_qty":    "MOQ",
-    })
+display["total_stock_qty"] = display["total_stock_qty"].fillna(0).astype(int)
+display["in_stock"] = display["total_stock_qty"] > 0
 
-    selected_rows = st.dataframe(
-        display,
-        use_container_width=True,
-        hide_index=True,
-        on_select="rerun",
-        selection_mode="single-row",
-    )
+display = display.rename(columns={
+    "product_ref":     "Ref",
+    "product_name":    "Name",
+    "product_type":    "Type",
+    "category": "Category",
+    "subcategory": "Sub-category",
+    "min_unit_price":  "Price (€)",
+    "total_stock_qty": "Stock",
+    "min_order_qty":   "MOQ",
+    "in_stock":        "In stock",
+})
 
-with right:
-    st.subheader("Product detail")
+selected_rows = st.dataframe(
+    display,
+    use_container_width=True,
+    hide_index=True,
+    on_select="rerun",
+    selection_mode="single-row",
+    column_config={
+        "In stock": st.column_config.CheckboxColumn("In stock", disabled=True),
+    },
+)
 
-    selected_indices = selected_rows.selection.get("rows", [])
+# ── Product detail (stacked below table) ─────────────────────────────────────
+st.divider()
 
-    if selected_indices:
-        row = filtered.iloc[selected_indices[0]]
+selected_indices = selected_rows.selection.get("rows", [])
 
-        if row.get("imagemain"):
-            st.image(row["imagemain"], width=280)
+if selected_indices:
+    row = filtered.iloc[selected_indices[0]]
 
+    col_img, col_info = st.columns([1, 3])
+
+    with col_img:
+        if row.get("image_url"):
+            st.image(row["image_url"], width=280)
+
+    with col_info:
         st.markdown(f"### {row['product_name']}")
         st.markdown(f"**Ref:** {row['product_ref']}  |  **Type:** {row['product_type'] or '—'}")
-        st.markdown(f"**Category:** {row['category_name_1'] or '—'} › {row['category_name_2'] or '—'}")
+        st.markdown(f"**Category:** {row['category'] or '—'} › {row['subcategory'] or '—'}")
 
         st.divider()
 
-        # Pricing
         prices_df = load_prices(row["product_ref"])
         if not prices_df.empty:
             if prices_df["unit_price"].nunique() == 1:
@@ -141,21 +133,30 @@ with right:
             else:
                 st.markdown("**Volume pricing:**")
                 price_display = prices_df.copy()
-                price_display["Quantity"] = price_display["min_qty"].abs().apply(lambda x: f"Up to {int(x):,} units")
-                price_display["Unit price"] = price_display["unit_price"].apply(lambda x: f"€{float(x):.2f}")
-                st.dataframe(price_display[["Quantity", "Unit price"]], use_container_width=True, hide_index=True)
+                price_display["Quantity"] = price_display["min_qty"].abs().apply(
+                    lambda x: f"Up to {int(x):,} units"
+                )
+                price_display["Unit price"] = price_display["unit_price"].apply(
+                    lambda x: f"€{float(x):.2f}"
+                )
+                st.dataframe(
+                    price_display[["Quantity", "Unit price"]],
+                    use_container_width=True,
+                    hide_index=True,
+                )
 
+        stock_qty = int(row["total_stock_qty"]) if pd.notna(row["total_stock_qty"]) and row["total_stock_qty"] else 0
         c1, c2 = st.columns(2)
-        c1.metric("Stock qty", f"{int(row['total_stock_qty']):,}" if row['total_stock_qty'] else "—")
-        c2.metric("MOQ", str(row['min_order_qty'] or '—'))
+        c1.metric("Stock qty", f"{stock_qty:,}")
+        c2.metric("MOQ", str(row["min_order_qty"] or "—"))
 
         if row.get("composition"):
             st.markdown(f"**Material:** {row['composition']}")
 
         dims = [
-            f"L {row['item_length_mm']:.0f}mm" if pd.notna(row['item_length_mm']) else None,
-            f"W {row['item_width_mm']:.0f}mm"  if pd.notna(row['item_width_mm'])  else None,
-            f"H {row['item_height_mm']:.0f}mm" if pd.notna(row['item_height_mm']) else None,
+            f"L {row['item_length_mm']:.0f}mm" if pd.notna(row["item_length_mm"]) else None,
+            f"W {row['item_width_mm']:.0f}mm"  if pd.notna(row["item_width_mm"])  else None,
+            f"H {row['item_height_mm']:.0f}mm" if pd.notna(row["item_height_mm"]) else None,
         ]
         dims = [d for d in dims if d]
         if dims:
@@ -174,5 +175,8 @@ with right:
             st.session_state["order_product"] = row.to_dict()
             st.switch_page("pages/2_Configure_Order.py")
 
-    else:
-        st.info("Click a row to see product details, image, and variants.")
+else:
+    st.info("Click a row to see product details, image, and variants.")
+
+# ── Basket ────────────────────────────────────────────────────────────────────
+show_basket()

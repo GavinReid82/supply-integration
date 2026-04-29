@@ -10,10 +10,14 @@ python run_pipeline.py
 
 # Run dbt steps individually (from dbt_project/ directory)
 cd dbt_project && dbt seed
-cd dbt_project && dbt run
+cd dbt_project && dbt run                        # full build (requires XDC credentials if XDC_PRODUCT_URL set)
+cd dbt_project && dbt run --exclude tag:xdc      # MKO-only build (no XDC credentials needed)
 cd dbt_project && dbt test
 cd dbt_project && dbt run --select staging
 cd dbt_project && dbt run --select marts.catalog
+
+# To activate XDC: uncomment XDC_*_URL vars in .env, then:
+# python run_pipeline.py   (extracts XDC data → S3, then runs dbt with XDC enabled)
 
 # Launch the Streamlit UI
 streamlit run ui/app.py

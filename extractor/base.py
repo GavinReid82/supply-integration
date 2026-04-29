@@ -1,12 +1,12 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
 class SupplierConfig:
     name: str
-    base_url: str
     endpoints: dict[str, str]
+    base_url: str | None = None
 
 
 class SupplierExtractor(ABC):

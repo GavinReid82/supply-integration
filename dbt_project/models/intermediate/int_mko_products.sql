@@ -13,12 +13,12 @@ select
     item_height_mm,
     item_weight_kg,
     category_ref_1,
-    category_name_1,
+    category_name_1                 as category,
     category_ref_2,
-    category_name_2,
+    category_name_2                 as subcategory,
     category_ref_3,
     category_name_3,
-    imagemain,
+    imagemain                       as image_url,
     link360,
     linkvideo
 

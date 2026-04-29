@@ -31,6 +31,12 @@ models:
   - name: mko_print_prices
     description: One row per print technique per quantity tier. Used by the order configurator to calculate print costs.
     columns:
-      - name: teccode
+      - name: technique_code
+        tests:
+          - not_null
+      - name: quantity_min
+        tests:
+          - not_null
+      - name: price_per_unit
         tests:
           - not_null

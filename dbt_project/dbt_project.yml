@@ -12,6 +12,15 @@ macro-paths: ["macros"]
 target-path: "target"
 clean-targets: ["target", "dbt_packages"]
 
+seeds:
+  supply_integration:
+    pcm_templates:
+      +column_types:
+        template_name:     varchar
+        template_category: varchar
+        quantity_code:     varchar
+        catalog_category:  varchar
+
 models:
   supply_integration:
     staging:

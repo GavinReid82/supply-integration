@@ -3,7 +3,7 @@ import os
 import duckdb
 import pandas as pd
 
-DB_PATH = os.getenv("DUCKDB_PATH", "data/supply_integration.duckdb")
+DB_PATH = os.getenv("DUCKDB_PATH", "data/catalog_data_platform.duckdb")
 
 
 def query(sql: str, params: list = None) -> pd.DataFrame:

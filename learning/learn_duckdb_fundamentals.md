@@ -50,7 +50,7 @@ DuckDB is **embedded** — it runs *inside* your Python process:
 ```
 Your Python process
   ├── your code
-  └── DuckDB engine  ─── reads/writes ───▶  supply_integration.duckdb
+  └── DuckDB engine  ─── reads/writes ───▶  catalog_data_platform.duckdb
 ```
 
 No installation, no port conflicts, no user credentials, no background service to manage.
@@ -115,7 +115,7 @@ DuckDB views (staging + intermediate)
      │
      │  (dbt mart models — SQL transforms)
      ▼
-DuckDB tables (marts)  ←── written to data/supply_integration.duckdb
+DuckDB tables (marts)  ←── written to data/catalog_data_platform.duckdb
      │
      │  (ui/db.py — read-only Python connection)
      ▼
@@ -134,7 +134,7 @@ supply_integration:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DUCKDB_PATH', 'data/supply_integration.duckdb') }}"
+      path: "{{ env_var('DUCKDB_PATH', 'data/catalog_data_platform.duckdb') }}"
       extensions:
         - httpfs
       settings:
@@ -145,7 +145,7 @@ supply_integration:
 ```
 
 - `type: duckdb` — use the dbt-duckdb adapter
-- `path:` — the `.duckdb` file on disk; defaults to `data/supply_integration.duckdb`
+- `path:` — the `.duckdb` file on disk; defaults to `data/catalog_data_platform.duckdb`
 - `extensions: [httpfs]` — load the S3 extension automatically when dbt opens DuckDB
 - `settings:` — pass S3 credentials directly into the DuckDB session
 
@@ -172,7 +172,7 @@ import os
 import duckdb
 import pandas as pd
 
-DB_PATH = os.getenv("DUCKDB_PATH", "data/supply_integration.duckdb")
+DB_PATH = os.getenv("DUCKDB_PATH", "data/catalog_data_platform.duckdb")
 
 def query(sql: str, params: list = None) -> pd.DataFrame:
     con = duckdb.connect(DB_PATH, read_only=True)

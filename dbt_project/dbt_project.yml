@@ -20,6 +20,18 @@ seeds:
         template_category: varchar
         quantity_code:     varchar
         catalog_category:  varchar
+    mko_product__hscode:
+      +column_types:
+        variant_id: varchar
+        hs_code:    varchar
+    xdc_production_days:
+      +column_types:
+        print_technique:      varchar
+        print_color_quantity: integer
+        area_min:             integer
+        area_max:             integer
+        quantity_min:         integer
+        production_days:      integer
 
 models:
   supply_integration:

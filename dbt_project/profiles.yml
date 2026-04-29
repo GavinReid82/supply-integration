@@ -3,7 +3,7 @@ supply_integration:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DUCKDB_PATH', 'data/supply_integration.duckdb') }}"
+      path: "{{ env_var('DUCKDB_PATH', 'data/catalog_data_platform.duckdb') }}"
       extensions:
         - httpfs
       settings:

@@ -132,7 +132,7 @@ MKO_URL_SUFFIX_PRICE
 MKO_URL_SUFFIX_STOCK
 MKO_URL_SUFFIX_PRINT
 MKO_URL_SUFFIX_PRINT_PRICE
-DUCKDB_PATH          # optional, defaults to data/supply_integration.duckdb
+DUCKDB_PATH          # optional, defaults to data/catalog_data_platform.duckdb
 ```
 
 **2. Install dependencies**

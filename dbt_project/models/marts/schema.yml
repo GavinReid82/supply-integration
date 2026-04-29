@@ -1,6 +1,48 @@
 version: 2
 
 models:
+  - name: catalog
+    description: >
+      One row per supplier + product. Canonical product mart unioning all suppliers.
+      Grain: (supplier, product_ref).
+    columns:
+      - name: supplier
+        tests:
+          - not_null
+      - name: product_ref
+        tests:
+          - not_null
+
+  - name: variants
+    description: >
+      One row per variant. Canonical variant mart unioning all suppliers.
+      Grain: variant_id.
+    columns:
+      - name: variant_id
+        tests:
+          - not_null
+          - unique
+
+  - name: print_options
+    description: >
+      One row per supplier + product + technique + area. Canonical print options mart.
+      Grain: (supplier, product_ref, teccode, areacode). print_color is a derived
+      attribute of the technique and is not part of the key.
+      Note: data is currently at product level; future goal is variant_id granularity.
+    columns:
+      - name: supplier
+        tests:
+          - not_null
+      - name: product_ref
+        tests:
+          - not_null
+      - name: teccode
+        tests:
+          - not_null
+      - name: areacode
+        tests:
+          - not_null
+
   - name: mko_catalog
     description: >
       One row per Makito product. Joins product details, pricing, and stock.

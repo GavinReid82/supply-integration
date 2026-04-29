@@ -1,0 +1,307 @@
+print_technique,print_color_quantity,area_min,area_max,quantity_min,production_days
+CO2 Engraving 1,0,0,,1,2
+CO2 Engraving 1,0,0,,1000,3
+CO2 Engraving 1,0,0,,2500,4
+CO2 Engraving 1,0,0,,5000,6
+CO2 Engraving 1,0,0,,10000,9
+CO2 Engraving 2,0,0,,1,2
+CO2 Engraving 2,0,0,,1000,3
+CO2 Engraving 2,0,0,,2500,4
+CO2 Engraving 2,0,0,,5000,6
+CO2 Engraving 2,0,0,,10000,9
+CO2 Engraving 3,0,0,,1,2
+CO2 Engraving 3,0,0,,1000,3
+CO2 Engraving 3,0,0,,2500,4
+CO2 Engraving 3,0,0,,5000,6
+CO2 Engraving 3,0,0,,10000,9
+Custom Box (Myboxd),0,0,,1,4
+Custom Box (Myboxd),0,0,,250,6
+Custom Box (Myboxd),0,0,,1000,8
+Custom Box (Myboxd),0,0,,2500,12
+Custom Box (Myboxd),0,0,,5000,15
+Custom Box Inside (Myboxd),0,0,,1,6
+Custom Box Inside (Myboxd),0,0,,250,8
+Custom Box Inside (Myboxd),0,0,,1000,10
+Custom Box Inside (Myboxd),0,0,,2500,14
+Custom Box Inside (Myboxd),0,0,,5000,17
+Custom Card B,0,0,,1,3
+Custom Card B,0,0,,5000,5
+Custom sleeve,0,0,,1,7
+Custom sleeve,0,0,,2500,8
+Custom sleeve,0,0,,5000,9
+Custom sleeve,0,0,,10000,14
+Diamond Engraving,0,0,15,1,6
+Diamond Engraving,0,0,15,1000,7
+Diamond Engraving,0,0,15,2500,8
+Diamond Engraving,0,0,15,5000,10
+Diamond Engraving,0,0,15,10000,16
+Digital Print 1,0,0,,1,3
+Digital Print 1,0,0,,2500,4
+Digital Print 1,0,0,,5000,5
+Digital Print 1,0,0,,10000,7
+Digital Print 2,0,0,,1,3
+Digital Print 2,0,0,,1000,4
+Digital Print 2,0,0,,2500,5
+Digital Print 2,0,0,,5000,6
+Digital Print 2,0,0,,10000,8
+Digital Print 3,0,0,,1,4
+Digital Print 3,0,0,,500,5
+Digital Print 3,0,0,,1000,6
+Digital Print 3,0,0,,2500,8
+Digital Print 3,0,0,,5000,10
+Digital round 360-1,0,0,,1,4
+Digital round 360-1,0,0,,1000,5
+Digital round 360-1,0,0,,2500,6
+Digital round 360-1,0,0,,5000,7
+Digital round 360-1,0,0,,10000,10
+Digital round 360-2,0,0,,1,4
+Digital round 360-2,0,0,,1000,5
+Digital round 360-2,0,0,,2500,6
+Digital round 360-2,0,0,,5000,7
+Digital round 360-2,0,0,,10000,10
+Digital Transfer OS,0,0,,1,3
+Digital Transfer OS,0,0,,1000,4
+Digital Transfer OS,0,0,,2500,5
+Digital Transfer OS,0,0,,5000,6
+Digital Transfer OS,0,0,,10000,9
+Doming,0,0,,1,4
+Doming,0,0,,1000,5
+Doming,0,0,,2500,6
+Doming,0,0,,5000,8
+Doming,0,0,,10000,11
+Embroidery,0,0,120,1,4
+Embroidery,0,0,240,1,5
+Embroidery,0,0,60,500,7
+Embroidery,0,0,120,500,8
+Embroidery,0,0,180,500,9
+Embroidery,0,0,240,500,10
+Embroidery,0,0,60,1000,11
+Embroidery,0,0,120,1000,12
+Embroidery,0,0,180,1000,14
+Embroidery,0,0,240,1000,15
+Embroidery,0,0,60,2500,14
+Embroidery,0,0,120,2500,15
+Embroidery,0,0,180,2500,18
+Embroidery,0,0,240,2500,19
+Embroidery 3D,0,0,25,1,5
+Embroidery 3D,0,0,25,500,8
+Embroidery 3D,0,0,25,1000,12
+Embroidery 3D,0,0,25,2500,15
+Embroidery 3D,0,0,60,1,5
+Embroidery 3D,0,0,60,500,8
+Embroidery 3D,0,0,60,1000,12
+Embroidery 3D,0,0,60,2500,15
+Embroidery badge,0,0,50,1,5
+Embroidery badge,0,0,50,500,8
+Embroidery badge,0,0,50,1000,12
+Embroidery badge,0,0,50,2500,15
+Embroidery badge,0,0,75,1,5
+Embroidery badge,0,0,75,500,8
+Embroidery badge,0,0,75,1000,12
+Embroidery badge,0,0,75,2500,15
+Hot Stamping,0,0,25,1,5
+Hot Stamping,0,0,25,1000,6
+Hot Stamping,0,0,25,2500,7
+Hot Stamping,0,0,25,5000,9
+Hot Stamping,0,0,25,10000,12
+Hot Stamping,0,0,60,1,5
+Hot Stamping,0,0,60,1000,6
+Hot Stamping,0,0,60,2500,7
+Hot Stamping,0,0,60,5000,9
+Hot Stamping,0,0,60,10000,12
+Laser Engraving 1,0,0,,1,2
+Laser Engraving 1,0,0,,1000,3
+Laser Engraving 1,0,0,,2500,4
+Laser Engraving 1,0,0,,5000,6
+Laser Engraving 1,0,0,,10000,9
+Laser Engraving 2,0,0,,1,2
+Laser Engraving 2,0,0,,1000,3
+Laser Engraving 2,0,0,,2500,4
+Laser Engraving 2,0,0,,5000,6
+Laser Engraving 2,0,0,,10000,9
+Laser Engraving 3,0,0,,1,2
+Laser Engraving 3,0,0,,1000,3
+Laser Engraving 3,0,0,,2500,4
+Laser Engraving 3,0,0,,5000,6
+Laser Engraving 3,0,0,,10000,9
+Laser Round 360,0,0,,1,6
+Laser Round 360,0,0,,500,7
+Laser Round 360,0,0,,1000,8
+Laser Round 360,0,0,,2500,9
+Laser Round 360,0,0,,5000,14
+Leather badge,0,0,75,1,5
+Leather badge,0,0,75,500,8
+Leather badge,0,0,75,1000,12
+Leather badge,0,0,75,2500,15
+Pad Print,1,0,,1,2
+Pad Print,2,0,,1,2
+Pad Print,3,0,,1,3
+Pad Print,4,0,,1,3
+Pad Print,5,0,,1,3
+Pad Print,6,0,,1,3
+Pad Print,1,0,,1000,3
+Pad Print,2,0,,1000,3
+Pad Print,3,0,,1000,4
+Pad Print,4,0,,1000,4
+Pad Print,5,0,,1000,4
+Pad Print,6,0,,1000,4
+Pad Print,1,0,,2500,4
+Pad Print,2,0,,2500,4
+Pad Print,3,0,,2500,5
+Pad Print,4,0,,2500,5
+Pad Print,5,0,,2500,5
+Pad Print,6,0,,2500,5
+Pad Print,1,0,,5000,5
+Pad Print,2,0,,5000,5
+Pad Print,3,0,,5000,6
+Pad Print,4,0,,5000,6
+Pad Print,5,0,,5000,6
+Pad Print,6,0,,5000,6
+Pad Print,1,0,,10000,7
+Pad Print,2,0,,10000,7
+Pad Print,3,0,,10000,10
+Pad Print,4,0,,10000,10
+Pad Print,5,0,,10000,10
+Pad Print,6,0,,10000,10
+Pad Print Low,1,0,,1,2
+Pad Print Low,2,0,,1,2
+Pad Print Low,3,0,,1,3
+Pad Print Low,4,0,,1,3
+Pad Print Low,5,0,,1,3
+Pad Print Low,6,0,,1,3
+Pad Print Low,1,0,,1000,3
+Pad Print Low,2,0,,1000,3
+Pad Print Low,3,0,,1000,4
+Pad Print Low,4,0,,1000,4
+Pad Print Low,5,0,,1000,4
+Pad Print Low,6,0,,1000,4
+Pad Print Low,1,0,,2500,4
+Pad Print Low,2,0,,2500,4
+Pad Print Low,3,0,,2500,5
+Pad Print Low,4,0,,2500,5
+Pad Print Low,5,0,,2500,5
+Pad Print Low,6,0,,2500,5
+Pad Print Low,1,0,,5000,5
+Pad Print Low,2,0,,5000,5
+Pad Print Low,3,0,,5000,6
+Pad Print Low,4,0,,5000,6
+Pad Print Low,5,0,,5000,6
+Pad Print Low,6,0,,5000,6
+Pad Print Low,1,0,,10000,7
+Pad Print Low,2,0,,10000,7
+Pad Print Low,3,0,,10000,10
+Pad Print Low,4,0,,10000,10
+Pad Print Low,5,0,,10000,10
+Pad Print Low,6,0,,10000,10
+Pad Print Drinkware,1,0,,1,2
+Pad Print Drinkware,2,0,,1,2
+Pad Print Drinkware,3,0,,1,3
+Pad Print Drinkware,4,0,,1,3
+Pad Print Drinkware,5,0,,1,3
+Pad Print Drinkware,6,0,,1,3
+Pad Print Drinkware,1,0,,1000,3
+Pad Print Drinkware,2,0,,1000,3
+Pad Print Drinkware,3,0,,1000,4
+Pad Print Drinkware,4,0,,1000,4
+Pad Print Drinkware,5,0,,1000,4
+Pad Print Drinkware,6,0,,1000,4
+Pad Print Drinkware,1,0,,2500,4
+Pad Print Drinkware,2,0,,2500,4
+Pad Print Drinkware,3,0,,2500,5
+Pad Print Drinkware,4,0,,2500,5
+Pad Print Drinkware,5,0,,2500,5
+Pad Print Drinkware,6,0,,2500,5
+Pad Print Drinkware,1,0,,5000,5
+Pad Print Drinkware,2,0,,5000,5
+Pad Print Drinkware,3,0,,5000,6
+Pad Print Drinkware,4,0,,5000,6
+Pad Print Drinkware,5,0,,5000,6
+Pad Print Drinkware,6,0,,5000,6
+Pad Print Drinkware,1,0,,10000,7
+Pad Print Drinkware,2,0,,10000,7
+Pad Print Drinkware,3,0,,10000,10
+Pad Print Drinkware,4,0,,10000,10
+Pad Print Drinkware,5,0,,10000,10
+Pad Print Drinkware,6,0,,10000,10
+Printed badge,0,0,50,1,5
+Printed badge,0,0,50,500,8
+Printed badge,0,0,50,1000,12
+Printed badge,0,0,50,2500,15
+Printed badge,0,0,75,1,5
+Printed badge,0,0,75,500,8
+Printed badge,0,0,75,1000,12
+Printed badge,0,0,75,2500,15
+PU Label Balti Black,0,0,,1,5
+PU Label Balti Black,0,0,,500,8
+PU Label Balti Black,0,0,,1000,12
+PU Label Balti Black,0,0,,2500,15
+PU Label Balti Green,0,0,,1,5
+PU Label Balti Green,0,0,,500,8
+PU Label Balti Green,0,0,,1000,12
+PU Label Balti Green,0,0,,2500,15
+PU Label Balti Navy,0,0,,1,5
+PU Label Balti Navy,0,0,,500,8
+PU Label Balti Navy,0,0,,1000,12
+PU Label Balti Navy,0,0,,2500,15
+PU Label Brendon,0,0,,1,5
+PU Label Brendon,0,0,,500,8
+PU Label Brendon,0,0,,1000,12
+PU Label Brendon,0,0,,2500,15
+PU Label Sortino,0,0,,1,5
+PU Label Sortino,0,0,,500,8
+PU Label Sortino,0,0,,1000,12
+PU Label Sortino,0,0,,2500,15
+Screen Transfer OS,1,0,,1,3
+Screen Transfer OS,2,0,,1,3
+Screen Transfer OS,3,0,,1,3
+Screen Transfer OS,4,0,,1,3
+Screen Transfer OS,5,0,,1,3
+Screen Transfer OS,6,0,,1,3
+Screen Transfer OS,1,0,,1000,4
+Screen Transfer OS,2,0,,1000,4
+Screen Transfer OS,3,0,,1000,4
+Screen Transfer OS,4,0,,1000,5
+Screen Transfer OS,5,0,,1000,5
+Screen Transfer OS,6,0,,1000,5
+Screen Transfer OS,1,0,,2500,5
+Screen Transfer OS,2,0,,2500,5
+Screen Transfer OS,3,0,,2500,5
+Screen Transfer OS,4,0,,2500,6
+Screen Transfer OS,5,0,,2500,6
+Screen Transfer OS,6,0,,2500,6
+Screen Transfer OS,1,0,,5000,6
+Screen Transfer OS,2,0,,5000,6
+Screen Transfer OS,3,0,,5000,6
+Screen Transfer OS,4,0,,5000,7
+Screen Transfer OS,5,0,,5000,7
+Screen Transfer OS,6,0,,5000,7
+Screen Transfer OS,1,0,,10000,9
+Screen Transfer OS,2,0,,10000,9
+Screen Transfer OS,3,0,,10000,9
+Screen Transfer OS,4,0,,10000,10
+Screen Transfer OS,5,0,,10000,10
+Screen Transfer OS,6,0,,10000,10
+SilkScreen,1,0,,1,3
+SilkScreen,1,0,,200,4
+SilkScreen,1,0,,1000,5
+SilkScreen,1,0,,2500,6
+SilkScreen,1,0,,5000,8
+SilkScreen,1,0,,10000,11
+SilkScreen Round,1,0,,1,3
+SilkScreen Round,2,0,,1,3
+SilkScreen Round,1,0,,2500,4
+SilkScreen Round,2,0,,2500,4
+SilkScreen Round,1,0,,5000,6
+SilkScreen Round,2,0,,5000,6
+SilkScreen Round,1,0,,10000,10
+SilkScreen Round,2,0,,10000,10
+Sublimation,0,0,,1,4
+Sublimation,0,0,,500,5
+Sublimation,0,0,,1000,7
+Sublimation,0,0,,2500,10
+Sublimation,0,0,,5000,13
+Wrapping,0,0,,1,4
+Wrapping,0,0,,1000,5
+Wrapping,0,0,,2500,7
+Wrapping,0,0,,5000,8
+Wrapping,0,0,,10000,12

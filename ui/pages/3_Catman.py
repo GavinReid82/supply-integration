@@ -16,7 +16,7 @@ def load_templates() -> pd.DataFrame:
 @st.cache_data
 def load_catalog() -> pd.DataFrame:
     return query(
-        """SELECT product_ref, product_name, category, subcategory, supplier
+        """SELECT product_ref, product_name, category, subcategory, supplier, image_url
            FROM catalog ORDER BY product_name"""
     )
 
@@ -128,6 +128,7 @@ else:
         "Product":   filtered["product_name"].values,
         "Ref":       filtered["product_ref"].values,
         "Slug":      [st.session_state[sk("slug", r)] for r in filtered["product_ref"]],
+        "Image":     filtered["image_url"].values,
         "Qty Code":  [st.session_state.get(sk("qty", r)) or default_qty_code for r in filtered["product_ref"]],
     })
 
@@ -140,6 +141,7 @@ else:
             "Product":   st.column_config.TextColumn("Product", disabled=True),
             "Ref":       st.column_config.TextColumn("Ref", disabled=True, width="small"),
             "Slug":      st.column_config.TextColumn("Slug"),
+            "Image":     st.column_config.ImageColumn("Image", width="small"),
             "Qty Code":  st.column_config.TextColumn("Qty Code"),
         },
         key=f"catman_editor_{sel_cat}_{sel_sub}_{search}_{template}",

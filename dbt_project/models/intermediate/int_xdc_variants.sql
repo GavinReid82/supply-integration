@@ -39,7 +39,8 @@ select
     v.size,
     v.image_url,
     coalesce(a.is_available, false)                 as is_available,
-    null                                            as attribute_json
+    null                                            as attribute_json,
+    null                                            as hs_code
 
 from variants v
 left join availability a on v.variant_id = a.variant_id

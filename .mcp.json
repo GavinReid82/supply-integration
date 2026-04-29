@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "duckdb": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-duckdb",
+        "--db-path",
+        "/Users/gavin.reid/gavin/catalog_data_platform/data/catalog_data_platform.duckdb"
+      ]
+    },
+    "dbt": {
+      "command": "uvx",
+      "args": ["dbt-mcp"],
+      "env": {
+        "DBT_PROJECT_DIR": "/Users/gavin.reid/gavin/catalog_data_platform/dbt_project",
+        "DBT_PROFILES_DIR": "/Users/gavin.reid/gavin/catalog_data_platform/dbt_project",
+        "DBT_PROFILE": "supply_integration",
+        "DBT_TARGET": "dev",
+        "DBT_PATH": "/Users/gavin.reid/gavin/catalog_data_platform/.venv/bin/dbt"
+      }
+    },
+    "s3": {
+      "command": "npx",
+      "args": ["-y", "@gangadharrr/aws-s3-mcp"],
+      "env": {
+        "AWS_REGION": "eu-south-2"
+      }
+    }
+  }
+}

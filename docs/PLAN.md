@@ -176,7 +176,7 @@ Required environment variables:
 
 ```
 AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, AWS_DEFAULT_REGION
-S3_BUCKET, DUCKDB_PATH (optional, defaults to data/supply_integration.duckdb)
+S3_BUCKET, DUCKDB_PATH (optional, defaults to data/catalog_data_platform.duckdb)
 MKO_BASE_URL, MKO_URL_SUFFIX_PRODUCT, MKO_URL_SUFFIX_PRICE
 MKO_URL_SUFFIX_STOCK, MKO_URL_SUFFIX_PRINT, MKO_URL_SUFFIX_PRINT_PRICE
 ```

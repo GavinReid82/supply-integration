@@ -70,6 +70,17 @@ def load_product_price_tier(product_ref: str, quantity: int) -> float | None:
 
 
 @st.cache_data
+def load_catalog_search(search_term: str) -> pd.DataFrame:
+    return query(
+        """SELECT product_ref, product_name, product_type, category, subcategory, image_url
+           FROM catalog
+           WHERE lower(product_name) LIKE lower(?)
+           ORDER BY product_name""",
+        [f"%{search_term}%"],
+    )
+
+
+@st.cache_data
 def load_carriers(country_code: str) -> pd.DataFrame:
     return query(
         """SELECT z.id_carrier, c.carrier_name, z.price_eur
@@ -81,10 +92,33 @@ def load_carriers(country_code: str) -> pd.DataFrame:
     )
 
 
-# ── Guard: product must be pre-selected from catalog ─────────────────────────
+# ── Guard: product must be pre-selected or found via search ──────────────────
 if "order_product" not in st.session_state:
-    st.warning("No product selected. Please choose a product from the catalog first.")
-    if st.button("← Back to Catalog"):
+    st.title("🖨️ Configure Order")
+    st.info("Search for a product by name or keyword, or browse the catalog.")
+
+    search_term = st.text_input("Product name or keyword", placeholder="e.g. bag, notebook, pen...")
+
+    if search_term:
+        matches = load_catalog_search(search_term)
+        if matches.empty:
+            st.warning(f"No products found matching **{search_term}**.")
+        else:
+            st.caption(f"{len(matches)} product(s) found")
+            for _, row in matches.iterrows():
+                col_img, col_info, col_btn = st.columns([1, 6, 2])
+                with col_img:
+                    if row.get("image_url"):
+                        st.image(row["image_url"], width=60)
+                with col_info:
+                    st.markdown(f"**{row['product_name']}** — `{row['product_ref']}`")
+                    st.caption(f"{row.get('category') or ''} › {row.get('subcategory') or ''}")
+                with col_btn:
+                    if st.button("Select", key=f"pick_{row['product_ref']}"):
+                        st.session_state["order_product"] = row.to_dict()
+                        st.rerun()
+
+    if st.button("← Browse Catalog"):
         st.switch_page("pages/1_Catalog.py")
     st.stop()
 

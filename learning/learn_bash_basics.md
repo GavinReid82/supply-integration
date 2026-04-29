@@ -240,7 +240,7 @@ in the source code.
 #### `export` — set an environment variable
 
 ```bash
-export DUCKDB_PATH=/Users/gavin.reid/gavin/catalog_data_platform/data/supply_integration.duckdb
+export DUCKDB_PATH=/Users/gavin.reid/gavin/catalog_data_platform/data/catalog_data_platform.duckdb
 export AWS_DEFAULT_REGION=eu-south-2
 ```
 
@@ -249,7 +249,7 @@ shell). Without `export`, the variable would only be visible in the current shel
 
 **Project use:** Setting the DuckDB path before running dbt:
 ```bash
-export DUCKDB_PATH=/Users/gavin.reid/gavin/catalog_data_platform/data/supply_integration.duckdb
+export DUCKDB_PATH=/Users/gavin.reid/gavin/catalog_data_platform/data/catalog_data_platform.duckdb
 cd dbt_project && dbt run
 ```
 

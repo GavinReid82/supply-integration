@@ -96,7 +96,7 @@ supply_integration:
   outputs:
     dev:
       type: duckdb
-      path: "{{ env_var('DUCKDB_PATH', 'data/supply_integration.duckdb') }}"
+      path: "{{ env_var('DUCKDB_PATH', 'data/catalog_data_platform.duckdb') }}"
       extensions:
         - httpfs
       settings:
@@ -107,7 +107,7 @@ supply_integration:
 ```
 
 **`path`** — where DuckDB writes the database file. When running locally this is
-`data/supply_integration.duckdb`. Inside Docker it would be `/app/data/...`.
+`data/catalog_data_platform.duckdb`. Inside Docker it would be `/app/data/...`.
 The `env_var()` function reads from your `.env` file.
 
 **`extensions: [httpfs]`** — tells DuckDB to load the httpfs extension, which enables
@@ -273,13 +273,13 @@ in the staging model.
 
 ### Issue 1: DuckDB path was a Docker path
 
-**What happened:** The profiles.yml had `path: /app/data/supply_integration.duckdb`.
+**What happened:** The profiles.yml had `path: /app/data/catalog_data_platform.duckdb`.
 This path only exists inside a Docker container (where `/app` is the working directory).
 Running locally, DuckDB couldn't find or create the file at that path.
 
-**Fix:** Changed to `path: "{{ env_var('DUCKDB_PATH', 'data/supply_integration.duckdb') }}"`.
+**Fix:** Changed to `path: "{{ env_var('DUCKDB_PATH', 'data/catalog_data_platform.duckdb') }}"`.
 This defaults to a local `data/` directory when the env var isn't set, and lets Docker
-override it by setting `DUCKDB_PATH=/app/data/supply_integration.duckdb` in the
+override it by setting `DUCKDB_PATH=/app/data/catalog_data_platform.duckdb` in the
 container environment.
 
 **Lesson:** When building for both local and Docker environments, avoid hardcoded paths.

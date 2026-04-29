@@ -81,7 +81,7 @@ AWS S3, dbt, DuckDB, and Streamlit, all containerised in Docker.
    accidentally deleted a helper function still used by `fetch_price` and `fetch_stock`.
    Caused a `NameError`. Fixed by adding it back. Lesson: test after rewrites.
 
-3. **DuckDB path was a Docker path:** `profiles.yml` had `/app/data/supply_integration.duckdb`.
+3. **DuckDB path was a Docker path:** `profiles.yml` had `/app/data/catalog_data_platform.duckdb`.
    Fixed by using `env_var()` with a local fallback.
 
 4. **DuckDB S3 HTTP 400 error:** DuckDB's httpfs uses the global S3 endpoint by default.

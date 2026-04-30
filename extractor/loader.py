@@ -23,3 +23,18 @@ def upload_dataframe(df: pd.DataFrame, bucket: str, key: str) -> None:
     buf.seek(0)
     _s3().put_object(Body=buf.getvalue(), Bucket=bucket, Key=key)
     logger.info(f"Uploaded parquet ({len(df)} rows) → s3://{bucket}/{key}")
+
+
+def delete_partition(bucket: str, prefix: str) -> None:
+    """Delete all S3 objects under prefix (e.g. 'mko/raw/stock/2026-04-28/')."""
+    client = _s3()
+    paginator = client.get_paginator("list_objects_v2")
+    keys = [
+        {"Key": obj["Key"]}
+        for page in paginator.paginate(Bucket=bucket, Prefix=prefix)
+        for obj in page.get("Contents", [])
+    ]
+    if not keys:
+        return
+    client.delete_objects(Bucket=bucket, Delete={"Objects": keys})
+    logger.info(f"Deleted {len(keys)} object(s) under s3://{bucket}/{prefix}")

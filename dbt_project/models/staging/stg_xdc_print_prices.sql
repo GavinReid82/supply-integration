@@ -3,7 +3,7 @@
 -- 9 fixed quantity breakpoints stored as named columns; unpivoted in the intermediate layer.
 -- area_min / area_max are already in cm² in the raw feed; converted to mm² (×100) in int_xdc_print_prices.
 with source as (
-    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/xdc/raw/print_option_price/*/print_option_price.parquet')
+    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/xdc/raw/print_option_price/{{ var('run_date') }}/print_option_price.parquet')
 )
 
 select

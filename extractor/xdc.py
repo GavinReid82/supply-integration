@@ -1,13 +1,16 @@
 import io
 import logging
+from datetime import date as date_type, timedelta
 
 import pandas as pd
 
 from extractor.base import SupplierConfig, SupplierExtractor
 from extractor.client import get_with_retry
-from extractor.loader import upload_dataframe
+from extractor.loader import delete_partition, upload_dataframe
 
 logger = logging.getLogger(__name__)
+
+_XDC_FEEDS = ("product", "product_price", "print_option", "print_option_price", "stock")
 
 
 class XdcExtractor(SupplierExtractor):
@@ -36,4 +39,11 @@ class XdcExtractor(SupplierExtractor):
             upload_dataframe(df, self.bucket, s3_path)
             logger.info(f"Uploaded {len(df):,} rows → {s3_path}")
 
+        self._delete_old_partition(sup, date)
         logger.info(f"Extraction complete: {sup}")
+
+    def _delete_old_partition(self, sup: str, today: str) -> None:
+        """Remove the partition from 2 days ago, keeping only today + yesterday."""
+        stale = (date_type.fromisoformat(today) - timedelta(days=2)).isoformat()
+        for feed in _XDC_FEEDS:
+            delete_partition(self.bucket, f"{sup}/raw/{feed}/{stale}/")

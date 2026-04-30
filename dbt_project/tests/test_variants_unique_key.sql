@@ -1,8 +1,11 @@
--- Asserts variant_id is unique across all suppliers in the variants mart.
--- Returns rows on failure.
+-- Asserts (supplier, product_ref, variant_id) is unique in the variants mart.
+-- The same matnr (variant_id) can appear under multiple MKO products; product_ref
+-- is part of the grain.
 select
+    supplier,
+    product_ref,
     variant_id,
     count(*) as cnt
 from {{ ref('variants') }}
-group by variant_id
+group by supplier, product_ref, variant_id
 having count(*) > 1

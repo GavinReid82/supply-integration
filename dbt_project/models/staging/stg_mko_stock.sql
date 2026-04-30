@@ -1,5 +1,5 @@
 with source as (
-    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/mko/raw/stock/*/stock.parquet')
+    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/mko/raw/stock/{{ var('run_date') }}/stock.parquet')
 )
 
 select

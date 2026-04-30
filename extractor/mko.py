@@ -1,4 +1,5 @@
 import logging
+from datetime import date as date_type, timedelta
 
 from extractor.base import SupplierConfig, SupplierExtractor
 from extractor.endpoints import (
@@ -8,7 +9,7 @@ from extractor.endpoints import (
     fetch_products,
     fetch_stock,
 )
-from extractor.loader import upload_dataframe
+from extractor.loader import delete_partition, upload_dataframe
 
 logger = logging.getLogger(__name__)
 
@@ -41,4 +42,11 @@ class MkoExtractor(SupplierExtractor):
         stock_df = fetch_stock(cfg.base_url, cfg.endpoints["stock"])
         upload_dataframe(stock_df, self.bucket, f"{sup}/raw/stock/{date}/stock.parquet")
 
+        self._delete_old_partition(sup, date)
         logger.info(f"Extraction complete: {sup}")
+
+    def _delete_old_partition(self, sup: str, today: str) -> None:
+        """Remove the partition from 2 days ago, keeping only today + yesterday."""
+        stale = (date_type.fromisoformat(today) - timedelta(days=2)).isoformat()
+        for feed in ("product", "price", "print", "stock"):
+            delete_partition(self.bucket, f"{sup}/raw/{feed}/{stale}/")

@@ -1,5 +1,5 @@
 with source as (
-    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/mko/raw/price/*/price.parquet')
+    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/mko/raw/price/{{ var('run_date') }}/price.parquet')
 ),
 
 -- Unpivot 4 price tiers into one row per product/tier

@@ -15,13 +15,13 @@ models:
 
   - name: variants
     description: >
-      One row per variant. Canonical variant mart unioning all suppliers.
-      Grain: variant_id.
+      One row per supplier + product + variant. Canonical variant mart unioning all suppliers.
+      Grain: (supplier, product_ref, variant_id) — the same variant_id can appear under
+      multiple products (MKO shares matnr across product groups).
     columns:
       - name: variant_id
         tests:
           - not_null
-          - unique
 
   - name: print_options
     description: >

@@ -2,7 +2,7 @@
 -- Variant-level price tiers. XDC provides up to 6 quantity breaks per variant.
 -- Unpivots wide format (qty1..6, itempricenet_qty1..6) into one row per variant/tier.
 with source as (
-    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/xdc/raw/product_price/*/product_price.parquet')
+    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/xdc/raw/product_price/{{ var('run_date') }}/product_price.parquet')
 ),
 
 unpivoted as (

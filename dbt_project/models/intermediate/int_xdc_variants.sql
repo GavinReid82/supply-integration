@@ -3,11 +3,15 @@
 -- (3) computes is_available via two-tier logic: non-Outlet lifecycle OR stock > subcategory threshold.
 -- attribute_json is NULL — can be populated later from the 30+ variant attribute fields.
 with variants as (
-    select * from {{ ref('stg_xdc_variants') }}
+    select *
+    from {{ ref('stg_xdc_variants') }}
+    qualify row_number() over (partition by product_id, variant_id order by 1) = 1
 ),
 
 stock as (
-    select * from {{ ref('stg_xdc_stock') }}
+    select *
+    from {{ ref('stg_xdc_stock') }}
+    qualify row_number() over (partition by variant_id order by 1) = 1
 ),
 
 thresholds as (

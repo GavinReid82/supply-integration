@@ -1,0 +1,6 @@
+project:
+  name: catalog-data-platform
+postgres:
+  port: 5433
+webserver:
+  port: 8081

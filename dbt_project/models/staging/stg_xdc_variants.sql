@@ -3,7 +3,7 @@
 -- Renamed from the actual Excel/parquet column names to logical names used downstream.
 -- Dimensions: raw feed is cm → converted to mm. Weight: raw feed is grams → converted to kg.
 with source as (
-    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/xdc/raw/product/*/product.parquet')
+    select * from read_parquet('s3://{{ env_var("S3_BUCKET") }}/xdc/raw/product/{{ var('run_date') }}/product.parquet')
 )
 
 select

@@ -1,0 +1,21 @@
+# Mounts the project root into each Airflow container and injects credentials
+# from the parent .env. Run `astro dev start` from the airflow/ directory.
+services:
+  scheduler:
+    env_file: ../.env
+    environment:
+      DUCKDB_PATH: /usr/local/project/data/catalog_data_platform.duckdb
+    volumes:
+      - ../:/usr/local/project
+  webserver:
+    env_file: ../.env
+    environment:
+      DUCKDB_PATH: /usr/local/project/data/catalog_data_platform.duckdb
+    volumes:
+      - ../:/usr/local/project
+  triggerer:
+    env_file: ../.env
+    environment:
+      DUCKDB_PATH: /usr/local/project/data/catalog_data_platform.duckdb
+    volumes:
+      - ../:/usr/local/project
